@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPLC Method Development AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--panel:#0f1318;--border:#1e2530;--accent:#00e5c8;--a2:#7c3aed;--a3:#f59e0b;--text:#e2e8f0;--muted:#64748b;--ok:#10b981;--grad:linear-gradient(135deg,#00e5c8,#7c3aed);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,200,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,229,200,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.wrap{max-width:1080px;margin:0 auto;padding:2rem 1.5rem 5rem;position:relative;z-index:1;}
+header{text-align:center;padding:2.5rem 0 2rem;}
+.hl{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;opacity:.8;margin-bottom:.9rem;}
+h1{font-size:clamp(1.9rem,5vw,3rem);font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:.6rem;}
+.hsub{color:var(--muted);font-size:.9rem;max-width:500px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:1.4rem;position:relative;overflow:hidden;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);}
+.drug-lbl{font-family:'Space Mono',monospace;font-size:.67rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);opacity:.8;display:block;margin-bottom:.45rem;}
+.drug-wrap{position:relative;margin-bottom:.5rem;}
+#drugName{width:100%;background:rgba(255,255,255,.03);border:2px solid var(--border);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:600;padding:.8rem 1rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+#drugName:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,200,.09);}
+#drugName.found{border-color:rgba(0,229,200,.4);background:rgba(0,229,200,.025);}
+.drug-hint{font-family:'Space Mono',monospace;font-size:.61rem;color:var(--muted);margin-bottom:1rem;}
+#drop{display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;background:#141820;border:1px solid rgba(0,229,200,.2);border-radius:10px;z-index:200;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.6);}
+.di{padding:.6rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;}
+.di:hover,.di.sel{background:rgba(0,229,200,.07);}
+.dn{font-weight:700;font-size:.87rem;}.dc{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);}
+.dbanner{display:none;background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(0,229,200,.04));border:1px solid rgba(0,229,200,.18);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.1rem;gap:.8rem;flex-wrap:wrap;}
+.dbanner.show{display:flex;}
+.db-name{font-weight:800;font-size:.97rem;color:var(--text);margin-bottom:.12rem;}
+.db-iupac{font-family:'Space Mono',monospace;font-size:.59rem;color:var(--muted);line-height:1.5;word-break:break-all;margin-bottom:.42rem;}
+.db-tags{display:flex;flex-wrap:wrap;gap:.3rem;}
+.ftag{font-family:'Space Mono',monospace;font-size:.59rem;padding:.17rem .46rem;border-radius:4px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.28);color:#c4b5fd;}
+.ftag.g{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.28);color:#6ee7b7;}
+.pc-hdr{display:flex;align-items:center;gap:.55rem;margin-bottom:.9rem;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px var(--ok);flex-shrink:0;transition:all .3s;}
+.dot.off{background:var(--border);box-shadow:none;}
+.pc-lbl{font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);opacity:.82;}
+.pc-src{font-family:'Space Mono',monospace;font-size:.57rem;color:var(--muted);margin-left:auto;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:560px){.g2{grid-template-columns:1fr;}}
+.fld{display:flex;flex-direction:column;gap:.38rem;}
+.fld.full{grid-column:1/-1;}
+.fld label{font-family:'Space Mono',monospace;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);opacity:.72;}
+.fw{position:relative;}
+input,textarea{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:.79rem;padding:.57rem 2.2rem .57rem .8rem;outline:none;transition:border-color .2s,background .25s;width:100%;}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,200,.08);}
+input.af{border-color:rgba(0,229,200,.28);background:rgba(0,229,200,.028);}
+.ab{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);font-size:.5rem;color:var(--ok);font-family:'Space Mono',monospace;display:none;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:3px;padding:.08rem .3rem;pointer-events:none;}
+input.af~.ab{display:block;}
+textarea{resize:vertical;min-height:64px;padding-right:.8rem;}
+.divider{display:flex;align-items:center;gap:.7rem;margin:1.1rem 0 1rem;}
+.divider span{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.run-btn{width:100%;padding:.95rem;background:var(--grad);border:none;border-radius:10px;color:#0a0c10;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.run-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px);}
+.run-btn:disabled{opacity:.45;cursor:not-allowed;}
+.run-btn .sp{display:none;width:17px;height:17px;border:2px solid rgba(0,0,0,.3);border-top-color:#0a0c10;border-radius:50%;animation:spin .7s linear infinite;}
+.run-btn.ld .sp{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:9px;padding:.8rem 1rem;color:#fca5a5;font-size:.82rem;margin-bottom:1rem;display:none;white-space:pre-line;}
+.err.show{display:block;}
+.prog{display:none;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1.15rem 1.35rem;margin-bottom:1.35rem;}
+.prog.show{display:block;}
+.pills{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.65rem;}
+.pill{font-family:'Space Mono',monospace;font-size:.6rem;padding:.25rem .62rem;border-radius:100px;border:1px solid var(--border);color:var(--muted);transition:all .3s;}
+.pill.act{border-color:var(--accent);color:var(--accent);background:rgba(0,229,200,.07);animation:blink 1s ease-in-out infinite;}
+.pill.done{border-color:var(--ok);color:var(--ok);background:rgba(16,185,129,.07);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.ptrack{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pfill{height:100%;background:var(--grad);border-radius:2px;transition:width .4s ease;width:0;}
+#out{display:none;}
+#out.show{display:block;animation:fup .4s ease;}
+@keyframes fup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.sumbox{background:linear-gradient(135deg,rgba(0,229,200,.04),rgba(124,58,237,.04));border:1px solid rgba(0,229,200,.18);border-radius:10px;padding:1rem 1.15rem;margin-bottom:1.1rem;}
+.sumbox .st{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);text-transform:uppercase;letter-spacing:.17em;margin-bottom:.35rem;}
+.tagrow{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem;}
+.tag{font-family:'Space Mono',monospace;font-size:.6rem;padding:.18rem .55rem;border-radius:100px;border:1px solid var(--border);color:var(--muted);}
+.scard{background:var(--panel);border:1px solid var(--border);border-radius:13px;margin-bottom:1rem;overflow:hidden;}
+.shdr{display:flex;align-items:center;gap:.65rem;padding:.95rem 1.3rem;cursor:pointer;user-select:none;transition:background .2s;}
+.shdr:hover{background:rgba(255,255,255,.018);}
+.scard.op .shdr{border-bottom:1px solid var(--border);}
+.snum{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);background:rgba(0,229,200,.09);border:1px solid rgba(0,229,200,.2);border-radius:5px;padding:.16rem .44rem;flex-shrink:0;}
+.stitle{flex:1;font-weight:700;font-size:.92rem;color:var(--text);}
+.schev{color:var(--muted);font-size:.75rem;transition:transform .25s;flex-shrink:0;}
+.scard.op .schev{transform:rotate(180deg);}
+.sbody{display:none;padding:1.2rem 1.3rem 1.4rem;}
+.scard.op .sbody{display:block;}
+/* Content styles */
+.ca{font-size:.86rem;line-height:1.82;color:#c8d4e8;}
+.ca .ch{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin:1.1rem 0 .45rem;padding-bottom:.25rem;border-bottom:1px solid rgba(0,229,200,.12);}
+.ca .csub{font-size:.89rem;font-weight:700;color:var(--text);margin:.85rem 0 .28rem;}
+.ca p{margin-bottom:.68rem;}
+.ca ul{padding-left:1.3rem;margin-bottom:.68rem;list-style:disc;}
+.ca ol{padding-left:1.3rem;margin-bottom:.68rem;list-style:decimal;}
+.ca li{margin-bottom:.28rem;}
+.ca strong{color:var(--text);font-weight:700;}
+.ca em{color:var(--a3);font-style:italic;}
+/* Trial table */
+.ttable-wrap{width:100%;overflow-x:auto;margin-top:1rem;border-radius:10px;border:1px solid var(--border);}
+.ttable{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:.72rem;min-width:900px;}
+.ttable thead tr{background:rgba(0,229,200,.06);}
+.ttable th{padding:.55rem .75rem;text-align:left;color:var(--accent);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid rgba(0,229,200,.2);white-space:nowrap;font-weight:700;}
+.ttable td{padding:.48rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);color:#c8d4e8;vertical-align:top;line-height:1.45;}
+.ttable tr:last-child td{border-bottom:none;}
+.ttable tr:hover td{background:rgba(255,255,255,.02);}
+.ttable td:first-child{font-weight:700;color:var(--text);white-space:nowrap;}
+.ttable td.iso{color:#6ee7b7;}
+.ttable td.grad{color:#c4b5fd;}
+.mt-badge{display:inline-block;font-size:.55rem;padding:.12rem .45rem;border-radius:3px;font-weight:700;letter-spacing:.05em;margin-bottom:.2rem;}
+.mt-iso{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.35);color:#6ee7b7;}
+.mt-grad{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:#c4b5fd;}
+.ttable td .rat{font-size:.63rem;color:var(--muted);margin-top:.25rem;line-height:1.4;font-family:'Syne',sans-serif;}
+/* Green bars */
+.gbars{display:flex;flex-direction:column;gap:.55rem;margin-top:.9rem;}
+.grow{display:flex;align-items:center;gap:.6rem;}
+.glbl{width:130px;color:var(--muted);font-family:'Space Mono',monospace;font-size:.62rem;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gtrk{flex:1;height:10px;background:rgba(255,255,255,.05);border-radius:5px;overflow:hidden;}
+.gfil{height:100%;border-radius:5px;transition:width 1.2s ease;}
+.gsc{width:38px;text-align:right;font-family:'Space Mono',monospace;font-size:.68rem;font-weight:700;}
+.grat{font-size:.66rem;color:var(--muted);padding-left:138px;margin-bottom:.4rem;line-height:1.4;}
+/* Green score table */
+.gtable-wrap{width:100%;overflow-x:auto;margin-top:1.1rem;border-radius:10px;border:1px solid var(--border);}
+.gtable{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:.72rem;}
+.gtable thead tr{background:rgba(16,185,129,.06);}
+.gtable th{padding:.5rem .75rem;text-align:left;color:var(--ok);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid rgba(16,185,129,.2);white-space:nowrap;}
+.gtable td{padding:.45rem .75rem;border-bottom:1px solid rgba(255,255,255,.04);color:#c8d4e8;vertical-align:middle;}
+.gtable tr:last-child td{border-bottom:none;}
+.gtable tr:hover td{background:rgba(255,255,255,.018);}
+.gscore-cell{display:flex;align-items:center;gap:.55rem;}
+.gscore-mini-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;min-width:80px;}
+.gscore-mini-fill{height:100%;border-radius:4px;transition:width 1.2s ease;}
+.gscore-num{font-weight:700;font-size:.75rem;width:32px;text-align:right;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── PDF / PRINT STYLES ── */
+.pdf-btn{
+  display:none;align-items:center;gap:.5rem;
+  padding:.7rem 1.4rem;background:var(--grad);border:none;border-radius:9px;
+  color:#0a0c10;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;
+  cursor:pointer;transition:opacity .2s,transform .15s;
+}
+.pdf-btn:hover{opacity:.9;transform:translateY(-1px);}
+.pdf-btn.visible{display:flex;}
+#pdfBar{display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;
+  background:linear-gradient(135deg,rgba(0,229,200,.06),rgba(124,58,237,.05));
+  border:1px solid rgba(0,229,200,.2);border-radius:12px;
+  padding:1rem 1.25rem;margin-bottom:1.2rem;}
+#pdfBar.visible{display:flex;}
+.pdf-meta{display:flex;flex-direction:column;gap:.2rem;}
+.pdf-meta-title{font-weight:700;font-size:.9rem;color:var(--text);}
+.pdf-meta-sub{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);}
+
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:#fff!important;color:#111!important;font-family:Arial,Helvetica,sans-serif!important;}
+  body::before{display:none!important;}
+  .wrap{max-width:100%!important;padding:.5cm 1cm!important;}
+  /* Hide interactive elements */
+  .panel,.prog,#pdfBar,#fetchBar,.pdf-btn,.run-btn,.err,#drop,.drug-hint,.divider{display:none!important;}
+  /* Show output */
+  #out{display:block!important;animation:none!important;}
+  /* Print header */
+  .print-header{display:block!important;}
+  header{display:none!important;}
+  /* Section cards */
+  .scard{background:#f8fafc!important;border:1px solid #cbd5e1!important;border-radius:6px!important;margin-bottom:.5cm!important;page-break-inside:avoid;}
+  .scard.op .sbody,.sbody{display:block!important;}
+  .shdr{background:#f1f5f9!important;cursor:default!important;padding:.4cm .5cm!important;}
+  .snum{background:#0ea5e9!important;border:none!important;color:#fff!important;border-radius:3px!important;font-size:.6rem!important;}
+  .stitle{color:#0f172a!important;font-size:.95rem!important;}
+  .schev{display:none!important;}
+  .sbody{padding:.35cm .5cm!important;}
+  .ca{color:#334155!important;font-size:.8rem!important;line-height:1.6!important;}
+  .ca ul{color:#334155!important;}
+  .ca li{color:#334155!important;}
+  .ca strong{color:#0f172a!important;}
+  /* Summary box */
+  .sumbox{background:#f0fdf4!important;border:1px solid #86efac!important;border-radius:6px!important;margin-bottom:.4cm!important;}
+  .sumbox .st{color:#059669!important;}
+  .tag{border:1px solid #94a3b8!important;color:#475569!important;}
+  /* Tables */
+  .ttable-wrap,.gtable-wrap{overflow:visible!important;border:1px solid #cbd5e1!important;border-radius:4px!important;}
+  .ttable,.gtable{font-size:.62rem!important;min-width:unset!important;}
+  .ttable th{background:#e0f2fe!important;color:#0369a1!important;border-bottom:2px solid #7dd3fc!important;}
+  .ttable td{color:#1e293b!important;border-bottom:1px solid #e2e8f0!important;}
+  .gtable th{background:#dcfce7!important;color:#15803d!important;border-bottom:2px solid #86efac!important;}
+  .gtable td{color:#1e293b!important;border-bottom:1px solid #e2e8f0!important;}
+  .mt-iso{background:#dcfce7!important;border:1px solid #86efac!important;color:#15803d!important;}
+  .mt-grad{background:#ede9fe!important;border:1px solid #c4b5fd!important;color:#6d28d9!important;}
+  .mt-badge{font-size:.5rem!important;}
+  /* Green bars — print as colored blocks */
+  .gfil,.gscore-mini-fill{-webkit-print-color-adjust:exact!important;}
+  /* Page settings */
+  @page{margin:1.5cm;size:A4 landscape;}
+  .ttable-wrap{page-break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hl">AI-Powered Analytical Chemistry Engine</div>
+  <h1>HPLC Method Development</h1>
+  <p class="hsub">ICH Q2(R2) · USP &lt;621&gt; · Green Analytical Chemistry · Validation Ready</p>
+</header>
+
+<div class="panel">
+  <label class="drug-lbl">Drug Name *</label>
+  <div class="drug-wrap">
+    <input type="text" id="drugName" autocomplete="off"
+      placeholder="Type drug name — e.g. Metformin, Amlodipine, Ibuprofen…"
+      oninput="onInput()" onkeydown="onKey(event)" onblur="onDrugBlur()"/>
+    <div id="drop"></div>
+  </div>
+  <div class="drug-hint">▸ Type any drug name — known drugs fill instantly; unknown drugs auto-fetch from PubChem &amp; scientific sources</div>
+
+  <!-- Fetch status bar (shown during live lookup) -->
+  <div id="fetchBar" style="display:none;align-items:center;gap:.6rem;font-family:'Space Mono',monospace;font-size:.68rem;padding:.55rem .9rem;border-radius:8px;margin-bottom:.85rem;border:1px solid rgba(0,229,200,.25);color:var(--accent);background:rgba(0,229,200,.04);">
+    <div style="width:13px;height:13px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
+    <span id="fetchMsg">Searching PubChem and scientific sources…</span>
+  </div>
+
+  <div class="dbanner" id="banner">
+    <div style="flex:1;min-width:180px;">
+      <div class="db-name" id="bName"></div>
+      <div class="db-iupac" id="bIupac"></div>
+      <div class="db-tags" id="bTags"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);margin-top:.38rem;" id="bSrc">Data source loading…</div>
+    </div>
+  </div>
+
+  <div class="pc-hdr">
+    <span class="dot off" id="pcDot"></span>
+    <span class="pc-lbl">Physicochemical Data</span>
+    <span class="pc-src" id="pcSrc">Select drug above to auto-populate</span>
+  </div>
+  <div class="g2">
+    <div class="fld"><label>Molecular Weight</label><div class="fw"><input id="mw" placeholder="—"/><span class="ab" id="ab_mw">DB</span></div></div>
+    <div class="fld"><label>Molecular Formula</label><div class="fw"><input id="formula" placeholder="—"/><span class="ab" id="ab_formula">DB</span></div></div>
+    <div class="fld"><label>LogP</label><div class="fw"><input id="logp" placeholder="—"/><span class="ab" id="ab_logp">DB</span></div></div>
+    <div class="fld"><label>pKa</label><div class="fw"><input id="pka" placeholder="—"/><span class="ab" id="ab_pka">DB</span></div></div>
+    <div class="fld"><label>H-Bond Donors / Acceptors</label><div class="fw"><input id="hbond" placeholder="—"/><span class="ab" id="ab_hbond">DB</span></div></div>
+    <div class="fld"><label>Topological PSA</label><div class="fw"><input id="tpsa" placeholder="—"/><span class="ab" id="ab_tpsa">DB</span></div></div>
+    <div class="fld"><label>Aqueous Solubility</label><div class="fw"><input id="sol" placeholder="—"/><span class="ab" id="ab_sol">DB</span></div></div>
+    <div class="fld"><label>UV Lambda-max (nm)</label><div class="fw"><input id="uv" placeholder="—"/><span class="ab" id="ab_uv">DB</span></div></div>
+    <div class="fld"><label>BCS Class</label><div class="fw"><input id="bcs" placeholder="—"/><span class="ab" id="ab_bcs">DB</span></div></div>
+    <div class="fld"><label>Drug Class</label><div class="fw"><input id="dclass" placeholder="—"/><span class="ab" id="ab_dclass">DB</span></div></div>
+    <div class="fld full"><label>Canonical SMILES</label><div class="fw"><input id="smiles" placeholder="—"/><span class="ab" id="ab_smiles">DB</span></div></div>
+    <div class="fld full"><label>Synonyms / Trade Names</label><div class="fw"><input id="syns" placeholder="—"/><span class="ab" id="ab_syns">DB</span></div></div>
+    <div class="fld full"><label>Stability / Degradation</label><div class="fw"><input id="stab" placeholder="—"/><span class="ab" id="ab_stab">DB</span></div></div>
+  </div>
+  <div class="divider"><span>Optional Notes / Overrides</span></div>
+  <div class="fld" style="margin-bottom:1.2rem;">
+    <label>Additional Notes</label>
+    <textarea id="notes" placeholder="Override any field or add context…"></textarea>
+  </div>
+  <div class="err" id="errBox"></div>
+  <!-- Rate limit box -->
+  <div id="rateLimitBox" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:1rem 1.1rem;margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+      <span style="font-size:1.1rem;">⏱</span>
+      <span style="font-weight:700;color:var(--a3);font-size:.9rem;">API Rate Limit Reached</span>
+    </div>
+    <p style="font-size:.82rem;color:#fcd34d;margin-bottom:.6rem;">You've made too many requests in a short time. This is a Claude API session limit — not an app error. The PDF download is unaffected.</p>
+    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <div style="font-family:'Space Mono',monospace;font-size:.75rem;color:var(--muted);">Auto-retry in: <span id="countdown" style="color:var(--a3);font-weight:700;">90s</span></div>
+      <button onclick="retryNow()" style="padding:.35rem .85rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:var(--a3);font-family:'Syne',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;">↺ Retry Now</button>
+      <button onclick="hideRateLimit()" style="padding:.35rem .85rem;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Syne',sans-serif;font-size:.78rem;cursor:pointer;">✕ Dismiss</button>
+    </div>
+  </div>
+  <button class="run-btn" id="runBtn" onclick="run()">
+    <span class="sp"></span>
+    <span id="btnTxt">⚗ Generate HPLC Method Strategy</span>
+  </button>
+</div>
+
+<div class="prog" id="prog">
+  <div class="pills" id="pills"></div>
+  <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+</div>
+<!-- Print-only header (hidden on screen) -->
+<div class="print-header" style="display:none;margin-bottom:.5cm;">
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #0ea5e9;padding-bottom:.3cm;margin-bottom:.3cm;">
+    <div>
+      <div style="font-size:1.3rem;font-weight:800;color:#0f172a;">HPLC Method Development Report</div>
+      <div style="font-size:.75rem;color:#475569;margin-top:.15rem;">ICH Q2(R2) Compliant · USP &lt;621&gt; · AI-Assisted Method Development</div>
+    </div>
+    <div style="text-align:right;font-size:.7rem;color:#64748b;">
+      <div id="printDrug" style="font-weight:700;font-size:.95rem;color:#0f172a;"></div>
+      <div id="printDate"></div>
+      <div>Generated by HPLC Method Dev AI</div>
+    </div>
+  </div>
+  <div id="printMeta" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.3cm;"></div>
+</div>
+
+<!-- PDF export bar (shown after analysis) -->
+<div id="pdfBar">
+  <div class="pdf-meta">
+    <div class="pdf-meta-title" id="pdfTitle">HPLC Method Report Ready</div>
+    <div class="pdf-meta-sub">All 7 sections · 5-Trial Table · Green Score Table · ICH Q2(R2) compliant</div>
+  </div>
+  <button class="pdf-btn visible" onclick="exportPDF()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download PDF Report
+  </button>
+</div>
+
+<div id="out"></div>
+</div>
+
+<script>
+/* ══════════════════════ DRUG DATABASE ══════════════════════ */
+const DB={
+"paracetamol":{iupac:"N-(4-hydroxyphenyl)acetamide",formula:"C8H9NO2",mw:"151.16 g/mol",smiles:"CC(=O)Nc1ccc(O)cc1",logp:"0.46",pka:"9.38 (phenol-OH, acidic)",hbond:"2 donors / 2 acceptors",tpsa:"49.33 A2",uv:"243, 293 nm",sol:"14 mg/mL (water)",bcs:"Class I",dclass:"Analgesic / Antipyretic",syns:"Acetaminophen, Tylenol, Panadol, APAP",stab:"Hydrolysis to p-aminophenol; oxidation to NAPQI; photodegradation"},
+"acetaminophen":{iupac:"N-(4-hydroxyphenyl)acetamide",formula:"C8H9NO2",mw:"151.16 g/mol",smiles:"CC(=O)Nc1ccc(O)cc1",logp:"0.46",pka:"9.38 (phenol-OH, acidic)",hbond:"2 donors / 2 acceptors",tpsa:"49.33 A2",uv:"243, 293 nm",sol:"14 mg/mL",bcs:"Class I",dclass:"Analgesic / Antipyretic",syns:"Paracetamol, Tylenol, Panadol",stab:"Hydrolysis to p-aminophenol; oxidation to NAPQI"},
+"metformin":{iupac:"1,1-dimethylbiguanide",formula:"C4H11N5",mw:"129.16 g/mol",smiles:"CN(C)C(=N)NC(=N)N",logp:"-1.43",pka:"2.8 (biguanide), 11.5 (guanidinium)",hbond:"5 donors / 5 acceptors",tpsa:"88.99 A2",uv:"232 nm",sol:"Freely soluble, greater than 300 mg/mL",bcs:"Class III",dclass:"Biguanide Antidiabetic",syns:"Glucophage, Fortamet, Glumetza",stab:"Thermally stable; minimal hydrolysis; photostable"},
+"amlodipine":{iupac:"3-ethyl 5-methyl 2-[(2-aminoethoxy)methyl]-4-(2-chlorophenyl)-6-methyl-1,4-dihydropyridine-3,5-dicarboxylate",formula:"C20H25ClN2O5",mw:"408.88 g/mol",smiles:"CCOC(=O)C1=C(COCCN)NC(C)=C(C(=O)OC)C1c1ccccc1Cl",logp:"3.0",pka:"8.6 (basic primary amine)",hbond:"3 donors / 8 acceptors",tpsa:"113.29 A2",uv:"238, 360 nm",sol:"0.1 mg/mL (water)",bcs:"Class I",dclass:"Calcium Channel Blocker (CCB)",syns:"Norvasc, Istin, Amlo, Amlip",stab:"Photolytic at 360 nm; ester hydrolysis; dihydropyridine oxidation"},
+"ibuprofen":{iupac:"(RS)-2-(4-(2-methylpropyl)phenyl)propanoic acid",formula:"C13H18O2",mw:"206.28 g/mol",smiles:"CC(C)Cc1ccc(cc1)C(C)C(=O)O",logp:"3.97",pka:"4.91 (carboxylic acid, acidic)",hbond:"1 donor / 2 acceptors",tpsa:"37.30 A2",uv:"222, 264 nm",sol:"0.021 mg/mL (water)",bcs:"Class II",dclass:"NSAID / Analgesic",syns:"Advil, Nurofen, Motrin, Brufen",stab:"Stable at normal conditions; photostable"},
+"aspirin":{iupac:"2-acetoxybenzoic acid",formula:"C9H8O4",mw:"180.16 g/mol",smiles:"CC(=O)Oc1ccccc1C(=O)O",logp:"1.19",pka:"3.49 (carboxylic acid)",hbond:"1 donor / 4 acceptors",tpsa:"63.60 A2",uv:"228, 276 nm",sol:"3 mg/mL (water)",bcs:"Class I",dclass:"NSAID / Antiplatelet",syns:"Acetylsalicylic acid, Disprin, Ecotrin",stab:"Hydrolysis to salicylic acid and acetic acid; moisture sensitive"},
+"atorvastatin":{iupac:"(3R,5R)-7-[2-(4-fluorophenyl)-3-phenyl-4-(phenylcarbamoyl)-5-propan-2-yl-1H-pyrrol-1-yl]-3,5-dihydroxyheptanoic acid",formula:"C33H35FN2O5",mw:"558.64 g/mol",smiles:"CC(C)c1c(-c2ccc(F)cc2)c(-c2ccccc2)c(C(=O)Nc2ccccc2)n1CCC(O)CC(O)CC(=O)O",logp:"4.46",pka:"4.46 (carboxylic acid)",hbond:"4 donors / 7 acceptors",tpsa:"111.79 A2",uv:"246 nm",sol:"0.0012 mg/mL (water)",bcs:"Class II",dclass:"Statin / HMG-CoA Reductase Inhibitor",syns:"Lipitor, Sortis, Torvast",stab:"Acid/base hydrolysis; photodegradation; lactone formation"},
+"omeprazole":{iupac:"6-methoxy-2-[(4-methoxy-3,5-dimethylpyridin-2-yl)methylsulfinyl]-1H-benzimidazole",formula:"C17H19N3O3S",mw:"345.42 g/mol",smiles:"COc1ccc2[nH]c(S(=O)Cc3ncc(C)c(OC)c3C)nc2c1",logp:"2.23",pka:"4.77 (benzimidazole), 8.89 (pyridine)",hbond:"1 donor / 6 acceptors",tpsa:"107.88 A2",uv:"302 nm",sol:"0.36 mg/mL",bcs:"Class II/III",dclass:"Proton Pump Inhibitor (PPI)",syns:"Prilosec, Losec, Omez",stab:"Highly acid-labile; sulfenamide formation; photodegradation"},
+"ciprofloxacin":{iupac:"1-cyclopropyl-6-fluoro-4-oxo-7-(piperazin-1-yl)-1,4-dihydroquinoline-3-carboxylic acid",formula:"C17H18FN3O3",mw:"331.34 g/mol",smiles:"O=C(O)c1cn(C2CC2)c2cc(N3CCNCC3)c(F)cc2c1=O",logp:"0.28",pka:"6.09 (COOH), 8.62 (piperazine NH)",hbond:"2 donors / 6 acceptors",tpsa:"74.57 A2",uv:"278, 317 nm",sol:"0.075 mg/mL",bcs:"Class IV",dclass:"Fluoroquinolone Antibiotic",syns:"Cipro, Ciproxin, Ciplox",stab:"Photodegradation; metal chelation; acid/base hydrolysis"},
+"diclofenac":{iupac:"2-[(2,6-dichlorophenyl)amino]phenylacetic acid",formula:"C14H11Cl2NO2",mw:"296.15 g/mol",smiles:"OC(=O)Cc1ccccc1Nc1c(Cl)cccc1Cl",logp:"4.51",pka:"4.15 (carboxylic acid)",hbond:"2 donors / 3 acceptors",tpsa:"49.33 A2",uv:"276 nm",sol:"0.0023 mg/mL",bcs:"Class II",dclass:"NSAID",syns:"Voltaren, Cataflam, Voveran",stab:"Photodegradation; oxidation"},
+"metoprolol":{iupac:"(RS)-1-[4-(2-methoxyethyl)phenoxy]-3-(propan-2-ylamino)propan-2-ol",formula:"C15H25NO3",mw:"267.36 g/mol",smiles:"COCCc1ccc(OCC(O)CNC(C)C)cc1",logp:"1.88",pka:"9.68 (secondary amine)",hbond:"3 donors / 4 acceptors",tpsa:"50.72 A2",uv:"222, 274 nm",sol:"Freely soluble (water)",bcs:"Class I",dclass:"Beta-1 Selective Adrenergic Blocker",syns:"Lopressor, Toprol-XL, Betaloc",stab:"Oxidative N-dealkylation; O-demethylation"},
+"sertraline":{iupac:"(1S,4S)-4-(3,4-dichlorophenyl)-N-methyl-1,2,3,4-tetrahydronaphthalen-1-amine",formula:"C17H17Cl2N",mw:"306.23 g/mol",smiles:"CNC1CCC[C@@H](c2ccc(Cl)c(Cl)c2)[C@H]1c1ccccc1",logp:"5.06",pka:"9.48 (secondary amine)",hbond:"1 donor / 1 acceptor",tpsa:"12.03 A2",uv:"267 nm",sol:"0.026 mg/mL",bcs:"Class I",dclass:"SSRI Antidepressant",syns:"Zoloft, Lustral, Serlain",stab:"N-desmethyl impurity; photolytic degradation"},
+"amoxicillin":{iupac:"(2S,5R,6R)-6-[[(2R)-2-amino-2-(4-hydroxyphenyl)acetyl]amino]-3,3-dimethyl-7-oxo-4-thia-1-azabicyclo[3.2.0]heptane-2-carboxylic acid",formula:"C16H19N3O5S",mw:"365.40 g/mol",smiles:"CC1(C)S[C@@H]2[C@H](NC(=O)[C@@H](N)c3ccc(O)cc3)C(=O)N2[C@H]1C(=O)O",logp:"0.87",pka:"2.4 (COOH), 7.4 (amino), 9.6 (phenol)",hbond:"5 donors / 7 acceptors",tpsa:"158.21 A2",uv:"272 nm",sol:"3.4 mg/mL",bcs:"Class I",dclass:"Aminopenicillin Antibiotic",syns:"Amoxil, Trimox, Moxatag",stab:"Beta-lactam hydrolysis to penicilloic acid; moisture sensitive"},
+"warfarin":{iupac:"(RS)-4-hydroxy-3-(3-oxo-1-phenylbutyl)-2H-chromen-2-one",formula:"C19H16O4",mw:"308.33 g/mol",smiles:"CC(=O)CC(c1ccccc1)c1c(O)c2ccccc2oc1=O",logp:"2.70",pka:"5.08 (enol-OH)",hbond:"1 donor / 4 acceptors",tpsa:"63.60 A2",uv:"308 nm",sol:"0.017 mg/mL",bcs:"Class II",dclass:"Anticoagulant (Vitamin K Antagonist)",syns:"Coumadin, Jantoven, Marevan",stab:"Photodegradation; oxidation; enol-keto tautomerism"},
+"fluoxetine":{iupac:"(RS)-N-methyl-3-phenyl-3-[4-(trifluoromethyl)phenoxy]propan-1-amine",formula:"C17H18F3NO",mw:"309.33 g/mol",smiles:"CNCCC(c1ccccc1)Oc1ccc(C(F)(F)F)cc1",logp:"4.05",pka:"8.7 (secondary amine)",hbond:"1 donor / 2 acceptors",tpsa:"21.26 A2",uv:"227, 270 nm",sol:"0.040 mg/mL",bcs:"Class I",dclass:"SSRI Antidepressant",syns:"Prozac, Sarafem, Fontex",stab:"N-demethylation to norfluoxetine; oxidation; photodegradation"},
+"simvastatin":{iupac:"Simvastatin lactone form",formula:"C25H38O5",mw:"418.57 g/mol",smiles:"CCC(C)(C)C(=O)OC1CC(=O)OCC1CC",logp:"4.68",pka:"13.5 (lactone OH)",hbond:"1 donor / 5 acceptors",tpsa:"72.83 A2",uv:"238 nm",sol:"0.030 mg/mL",bcs:"Class II",dclass:"Statin / HMG-CoA Reductase Inhibitor",syns:"Zocor, Simlup, Simcard",stab:"Acid hydrolysis of lactone; oxidative degradation"},
+"losartan":{iupac:"2-butyl-4-chloro-1-({4-[2-(2H-tetrazol-5-yl)phenyl]phenyl}methyl)-1H-imidazole-5-methanol",formula:"C22H23ClN6O",mw:"422.91 g/mol",smiles:"CCCCc1nc(Cl)c(CO)n1Cc1ccc(-c2ccccc2-c2nnn[nH]2)cc1",logp:"4.01",pka:"4.0 (tetrazole), 5.0 (imidazole)",hbond:"2 donors / 5 acceptors",tpsa:"97.99 A2",uv:"207, 254 nm",sol:"0.103 mg/mL",bcs:"Class II",dclass:"Angiotensin II Receptor Blocker (ARB)",syns:"Cozaar, Hyzaar, Losacar",stab:"Tetrazole oxidation; acid hydrolysis; photodegradation"},
+"pantoprazole":{iupac:"6-(difluoromethoxy)-2-[(3,4-dimethoxypyridin-2-yl)methylsulfinyl]-1H-benzimidazole",formula:"C16H15F2N3O4S",mw:"383.37 g/mol",smiles:"COc1ccnc(CS(=O)c2[nH]c3cc(OC(F)F)ccc3n2)c1OC",logp:"2.09",pka:"3.97 (benzimidazole), 8.24 (pyridine)",hbond:"1 donor / 7 acceptors",tpsa:"119.05 A2",uv:"291 nm",sol:"2 mg/mL (pH 7.4)",bcs:"Class II",dclass:"Proton Pump Inhibitor (PPI)",syns:"Protonix, Pantoloc, Pantodac",stab:"Acid-labile; sulfenamide formation; photodegradation"},
+"celecoxib":{iupac:"4-[5-(4-methylphenyl)-3-(trifluoromethyl)-1H-pyrazol-1-yl]benzenesulfonamide",formula:"C17H14F3N3O2S",mw:"381.37 g/mol",smiles:"Cc1ccc(-c2cc(C(F)(F)F)nn2-c2ccc(S(N)(=O)=O)cc2)cc1",logp:"3.50",pka:"11.1 (sulfonamide)",hbond:"1 donor / 4 acceptors",tpsa:"77.98 A2",uv:"254 nm",sol:"0.005 mg/mL",bcs:"Class II",dclass:"Selective COX-2 Inhibitor / NSAID",syns:"Celebrex, Celebra, Onsenal",stab:"Photodegradation; oxidation"},
+"gabapentin":{iupac:"2-[1-(aminomethyl)cyclohexyl]acetic acid",formula:"C9H17NO2",mw:"171.24 g/mol",smiles:"NCC1(CC(=O)O)CCCCC1",logp:"-1.10",pka:"3.68 (COOH), 10.70 (NH2)",hbond:"3 donors / 3 acceptors",tpsa:"63.32 A2",uv:"No chromophore; detect at 210 nm or derivatize",sol:"Freely soluble",bcs:"Class III",dclass:"Anticonvulsant / Neuropathic Pain",syns:"Neurontin, Gralise, Horizant",stab:"Lactonization; no aromatic ring"},
+"atenolol":{iupac:"2-{4-[2-hydroxy-3-(propan-2-ylamino)propoxy]phenyl}acetamide",formula:"C14H22N2O3",mw:"266.34 g/mol",smiles:"CC(C)NCC(O)COc1ccc(CC(N)=O)cc1",logp:"0.16",pka:"9.6 (amine)",hbond:"5 donors / 4 acceptors",tpsa:"84.58 A2",uv:"225, 274 nm",sol:"13 mg/mL",bcs:"Class III",dclass:"Beta-1 Selective Adrenergic Blocker",syns:"Tenormin, Noten, Tenoretic",stab:"Oxidative; photodegradation; deamidation"},
+"furosemide":{iupac:"4-chloro-2-(furan-2-ylmethylamino)-5-sulfamoylbenzoic acid",formula:"C12H11ClN2O5S",mw:"330.74 g/mol",smiles:"NS(=O)(=O)c1cc(C(=O)O)c(NCc2ccco2)cc1Cl",logp:"2.03",pka:"3.9 (COOH)",hbond:"4 donors / 7 acceptors",tpsa:"140.06 A2",uv:"228, 271 nm",sol:"0.073 mg/mL; greater than 10 mg/mL at pH 7.4",bcs:"Class IV",dclass:"Loop Diuretic",syns:"Lasix, Frusemide, Frusamide",stab:"Photodegradation to saluamine; strongly photosensitive"},
+"rosuvastatin":{iupac:"(3R,5S,6E)-7-[4-(4-fluorophenyl)-2-(N-methylmethanesulfonamido)-6-isopropylpyrimidin-5-yl]-3,5-dihydroxyhept-6-enoic acid",formula:"C22H28FN3O6S",mw:"481.54 g/mol",smiles:"CC(C)c1nc(-n(C)S(C)(=O)=O)nc(-c2ccc(F)cc2)c1C=CC(O)CC(O)CC(=O)O",logp:"1.04",pka:"4.30 (carboxylic acid)",hbond:"4 donors / 10 acceptors",tpsa:"144.45 A2",uv:"241 nm",sol:"7.8 mg/mL",bcs:"Class II",dclass:"Statin / HMG-CoA Reductase Inhibitor",syns:"Crestor, Rozavel, Rosulip",stab:"Lactone formation; Z-isomer (photodegradation); oxidation"},
+"nifedipine":{iupac:"dimethyl 2,6-dimethyl-4-(2-nitrophenyl)-1,4-dihydropyridine-3,5-dicarboxylate",formula:"C17H18N2O6",mw:"346.34 g/mol",smiles:"COC(=O)C1=C(C)NC(C)=C(C(=O)OC)C1c1ccccc1[N+](=O)[O-]",logp:"2.20",pka:"3.93 (DHP NH)",hbond:"1 donor / 7 acceptors",tpsa:"115.22 A2",uv:"235, 340 nm",sol:"0.010 mg/mL",bcs:"Class II",dclass:"Calcium Channel Blocker / Dihydropyridine CCB",syns:"Adalat, Procardia, Nifecard",stab:"Highly photosensitive; DHP ring aromatization; protect from light"},
+"tramadol":{iupac:"(1RS,2RS)-2-[(dimethylaminomethyl)]-1-(3-methoxyphenyl)cyclohexan-1-ol",formula:"C16H25NO2",mw:"263.38 g/mol",smiles:"CN(C)CC1(O)CCCCC1c1cccc(OC)c1",logp:"1.35",pka:"9.41 (tertiary amine)",hbond:"2 donors / 3 acceptors",tpsa:"32.78 A2",uv:"272 nm",sol:"Freely soluble as HCl salt",bcs:"Class I",dclass:"Opioid Analgesic / SNRI",syns:"Ultram, Tramal, Zydol",stab:"N-demethylation; N-oxide; photodegradation"},
+"clopidogrel":{iupac:"methyl (2S)-2-(2-chlorophenyl)-2-[6,7-dihydrothieno[3,2-c]pyridin-5(4H)-yl]acetate",formula:"C16H16ClNO2S",mw:"321.82 g/mol",smiles:"COC(=O)[C@@H](c1ccccc1Cl)N1CCc2sccc2C1",logp:"3.22",pka:"4.55 (amine)",hbond:"0 donors / 4 acceptors",tpsa:"50.27 A2",uv:"220, 270 nm",sol:"0.067 mg/mL",bcs:"Class II",dclass:"Antiplatelet / Thienopyridine",syns:"Plavix, Clopilet, Plagril",stab:"Rapid ester hydrolysis to inactive carboxylic acid"},
+"valsartan":{iupac:"(2S)-3-methyl-2-[pentanoyl-[[4-[2-(2H-tetrazol-5-yl)phenyl]phenyl]methyl]amino]butanoic acid",formula:"C24H29N5O3",mw:"435.52 g/mol",smiles:"CCCCC(=O)N(Cc1ccc(-c2ccccc2-c2nnn[nH]2)cc1)[C@@H](C(C)C)C(=O)O",logp:"4.77",pka:"3.9 (tetrazole), 4.7 (COOH)",hbond:"2 donors / 7 acceptors",tpsa:"108.62 A2",uv:"250 nm",sol:"0.040 mg/mL",bcs:"Class II",dclass:"Angiotensin II Receptor Blocker (ARB)",syns:"Diovan, Valzaar",stab:"Oxidation; tetrazole ring oxidation; photodegradation"},
+"montelukast":{iupac:"Montelukast sodium leukotriene receptor antagonist",formula:"C35H36ClNO3S",mw:"586.14 g/mol",smiles:"OC(C)(C)c1ccccc1CC[C@@H](CSC2(CC(=O)O)CC2)c1cccc(/C=C/c2ccc3cc(Cl)ccc3n2)c1",logp:"8.70",pka:"3.5 (carboxylic acid)",hbond:"2 donors / 5 acceptors",tpsa:"71.25 A2",uv:"340, 282 nm",sol:"0.001 mg/mL",bcs:"Class II",dclass:"Leukotriene Receptor Antagonist",syns:"Singulair, Montair, Monticope",stab:"E/Z isomerization; sulfoxide; photodegradation"},
+"ondansetron":{iupac:"(RS)-9-methyl-3-[(2-methylimidazol-1-yl)methyl]-2,3-dihydro-1H-carbazol-4(9H)-one",formula:"C18H19N3O",mw:"293.36 g/mol",smiles:"Cn1cc(CN2CC(=O)c3ccccc3[C@@H]2C)cn1",logp:"2.44",pka:"7.4 (imidazole)",hbond:"1 donor / 3 acceptors",tpsa:"39.72 A2",uv:"248, 310 nm",sol:"0.058 mg/mL; 40 mg/mL (HCl salt)",bcs:"Class I",dclass:"5-HT3 Antagonist / Antiemetic",syns:"Zofran, Emeset, Ondem",stab:"Photodegradation; N-oxide; hydrolysis"},
+"esomeprazole":{iupac:"(S)-6-methoxy-2-[(4-methoxy-3,5-dimethylpyridin-2-yl)methylsulfinyl]-1H-benzimidazole",formula:"C17H19N3O3S",mw:"345.42 g/mol",smiles:"COc1ccc2[nH]c(S(=O)Cc3ncc(C)c(OC)c3C)nc2c1",logp:"2.23",pka:"4.77, 8.89",hbond:"1 donor / 6 acceptors",tpsa:"107.88 A2",uv:"302 nm",sol:"0.36 mg/mL",bcs:"Class II",dclass:"Proton Pump Inhibitor (S-enantiomer of Omeprazole)",syns:"Nexium, Emanera, Nexpro",stab:"Acid-labile; racemization; sulfenamide; photodegradation"},
+"lisinopril":{iupac:"(2S)-1-[(2S)-6-amino-2-[[(1S)-1-carboxy-3-phenylpropyl]amino]hexanoyl]pyrrolidine-2-carboxylic acid",formula:"C21H31N3O5",mw:"405.49 g/mol",smiles:"NCCCC[C@@H](NC(=O)[C@H](CCc1ccccc1)N)[C@@H]1CCCN1C(=O)[C@@H](N)CC(=O)O",logp:"-0.01",pka:"2.5, 3.3, 6.7 (COOH), 10.1 (amine)",hbond:"6 donors / 8 acceptors",tpsa:"172.09 A2",uv:"215 nm (weak)",sol:"Soluble in water",bcs:"Class III",dclass:"ACE Inhibitor",syns:"Zestril, Prinivil, Lisodur",stab:"Diketopiperazine cyclization; hydrolysis"},
+"tamoxifen":{iupac:"(Z)-2-[4-(1,2-diphenylbut-1-en-1-yl)phenoxy]-N,N-dimethylethanamine",formula:"C26H29NO",mw:"371.51 g/mol",smiles:"CCC(=C(c1ccccc1)c1ccc(OCCN(C)C)cc1)c1ccccc1",logp:"7.07",pka:"8.85 (tertiary amine)",hbond:"0 donors / 2 acceptors",tpsa:"12.47 A2",uv:"237, 275 nm",sol:"0.000035 mg/mL",bcs:"Class II",dclass:"SERM / Breast Cancer Hormone Therapy",syns:"Nolvadex, Tamofen, Tamoplex",stab:"E/Z isomerization; N-oxidation; photodegradation"},
+"doxycycline":{iupac:"Doxycycline tetracycline antibiotic",formula:"C22H24N2O8",mw:"444.44 g/mol",smiles:"C[C@@H]1c2cccc(O)c2C(=O)C2=C1C(O)(CC)C(=O)C2=C(N)O",logp:"-0.02",pka:"3.4, 7.7, 9.7",hbond:"5 donors / 8 acceptors",tpsa:"200.62 A2",uv:"269, 354 nm",sol:"0.62 mg/mL",bcs:"Class I",dclass:"Tetracycline Antibiotic",syns:"Vibramycin, Doryx, Doxyhexal",stab:"Metal chelation; C-4 epimerization; photodegradation"},
+"sildenafil":{iupac:"5-[2-ethoxy-5-(4-methylpiperazin-1-yl)sulfonylphenyl]-1-methyl-3-propyl-4H-pyrazolo[4,3-d]pyrimidin-7-one",formula:"C22H30N6O4S",mw:"474.58 g/mol",smiles:"CCCc1nn(C)c2c(=O)[nH]c(-c3cc(S(=O)(=O)N4CCN(C)CC4)ccc3OCC)nc12",logp:"1.91",pka:"5.97 (piperazine), 8.70 (pyrimidinone NH)",hbond:"1 donor / 7 acceptors",tpsa:"113.42 A2",uv:"293 nm",sol:"3.5 mg/mL (pH 6.8)",bcs:"Class II",dclass:"PDE5 Inhibitor",syns:"Viagra, Revatio, Penegra",stab:"Oxidative; N-desmethyl impurity; photodegradation"},
+"tamsulosin":{iupac:"(R)-5-(2-{[2-(2-ethoxyphenoxy)ethyl]amino}propyl)-2-methoxybenzenesulfonamide",formula:"C20H28N2O5S",mw:"408.51 g/mol",smiles:"COc1ccc(CC[C@H](C)NCCOc2ccccc2OCC)cc1S(N)(=O)=O",logp:"2.16",pka:"9.29 (amine)",hbond:"2 donors / 7 acceptors",tpsa:"111.90 A2",uv:"225, 280 nm",sol:"0.085 mg/mL",bcs:"Class II",dclass:"Alpha-1 Adrenergic Blocker / BPH Treatment",syns:"Flomax, Urimax, Tamlosin",stab:"Oxidative N-dealkylation; O-demethylation"},
+"prednisolone":{iupac:"(11beta)-11,17,21-trihydroxypregna-1,4-diene-3,20-dione",formula:"C21H28O5",mw:"360.44 g/mol",smiles:"OCC(=O)[C@]1(O)CC[C@H]2[C@@H]1CCC1=CC(=O)C=C[C@]12O",logp:"1.62",pka:"12.6 (C21-OH)",hbond:"3 donors / 5 acceptors",tpsa:"94.83 A2",uv:"243 nm",sol:"0.2 mg/mL",bcs:"Class II",dclass:"Corticosteroid",syns:"Prelone, Orapred, Delta-Cortef",stab:"C11 oxidation; epimerization; photodegradation"}
+};
+DB["tylenol"]=DB["paracetamol"];DB["advil"]=DB["ibuprofen"];DB["prozac"]=DB["fluoxetine"];
+DB["glucophage"]=DB["metformin"];DB["norvasc"]=DB["amlodipine"];DB["lipitor"]=DB["atorvastatin"];
+DB["zoloft"]=DB["sertraline"];DB["cipro"]=DB["ciprofloxacin"];DB["prilosec"]=DB["omeprazole"];
+DB["lasix"]=DB["furosemide"];DB["nexium"]=DB["esomeprazole"];DB["crestor"]=DB["rosuvastatin"];
+DB["voltaren"]=DB["diclofenac"];DB["celebrex"]=DB["celecoxib"];DB["coumadin"]=DB["warfarin"];
+
+/* ══════════════════════════════════════════════════════
+   DRUG LOOKUP  — local DB first, live web search fallback
+══════════════════════════════════════════════════════ */
+function norm(s){return(s||'').toLowerCase().trim();}
+
+function search(q){
+  if(!q||q.length<2)return[];
+  q=norm(q);const out=[];
+  for(const k of Object.keys(DB)){
+    if(k.includes(q)||norm(DB[k].syns).includes(q)||norm(DB[k].dclass).includes(q)){
+      if(!out.includes(k)){out.push(k);if(out.length>=8)break;}
+    }
+  }
+  return out;
+}
+
+let acIdx=-1;
+function onInput(){
+  const hits=search(document.getElementById('drugName').value);
+  const drop=document.getElementById('drop');
+  if(!hits.length){drop.style.display='none';return;}
+  drop.innerHTML=hits.map(k=>`<div class="di" data-k="${k}" onmousedown="pickLocal('${k}')">
+    <span class="dn">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+    <span class="dc">${DB[k].dclass}</span>
+    <span style="font-family:'Space Mono',monospace;font-size:.52rem;color:var(--ok);margin-left:.5rem;">✦ instant</span>
+  </div>`).join('');
+  drop.style.display='block';acIdx=-1;
+}
+
+function onKey(e){
+  const items=[...document.getElementById('drop').querySelectorAll('.di')];
+  if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('sel',i===acIdx));}
+  else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('sel',i===acIdx));}
+  else if(e.key==='Enter'){
+    e.preventDefault();
+    if(acIdx>=0&&items[acIdx]){items[acIdx].dispatchEvent(new MouseEvent('mousedown'));}
+    else{
+      const q=norm(document.getElementById('drugName').value);
+      if(DB[q])pickLocal(q);
+      else fetchLive(document.getElementById('drugName').value.trim());
+    }
+  }
+  else if(e.key==='Escape')hideDrop();
+}
+
+function hideDrop(){document.getElementById('drop').style.display='none';}
+
+/* ── Fill from local DB (instant) ── */
+function pickLocal(key){
+  hideDrop();
+  const d=DB[key];if(!d)return;
+  document.getElementById('drugName').value=key.charAt(0).toUpperCase()+key.slice(1);
+  document.getElementById('drugName').classList.add('found');
+  fillFields(d,'Built-in DB','DB');
+}
+
+/* ── Fill fields helper ── */
+function fillFields(d, srcLabel, badgeText){
+  const FIELDS=['mw','formula','logp','pka','hbond','tpsa','sol','uv','bcs','dclass','smiles','syns','stab'];
+  FIELDS.forEach(id=>{
+    const f=document.getElementById(id);
+    const v=d[id]||'';
+    if(f){f.value=v;f.classList.toggle('af',!!v);}
+    const ab=document.getElementById('ab_'+id);
+    if(ab)ab.textContent=badgeText;
+  });
+  // Banner
+  const name=document.getElementById('drugName').value;
+  document.getElementById('bName').textContent=name;
+  document.getElementById('bIupac').textContent=d.iupac||'';
+  const tags=[d.formula,d.mw?'MW '+d.mw:'',d.logp?'LogP '+d.logp:'',d.bcs,d.dclass].filter(Boolean);
+  document.getElementById('bTags').innerHTML=tags.map((t,i)=>`<span class="ftag${i>=3?' g':''}">${t}</span>`).join('');
+  document.getElementById('banner').classList.add('show');
+  document.getElementById('pcDot').classList.remove('off');
+  document.getElementById('pcSrc').textContent=srcLabel+' — verify with primary sources for GLP/GCP use';
+  const bSrc=document.getElementById('bSrc');
+  if(bSrc)bSrc.textContent='Source: '+srcLabel;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FAST LIVE FETCH — 3-stage pipeline, typically completes in <3s
+   Stage 1: PubChem REST API via allorigins CORS proxy (~500ms)
+   Stage 2: Enrich missing fields (pKa, BCS, UV, stab) via Claude knowledge (~1s)
+   Stage 3: Fallback to pure Claude knowledge if PubChem fails
+══════════════════════════════════════════════════════════════ */
+
+const CORS = 'https://api.allorigins.win/get?url=';
+const ENRICH_SYS = `You are a pharmaceutical chemistry expert. Given a drug name and partial data already retrieved from PubChem, fill in ONLY the missing fields using your pharmaceutical knowledge.
+
+Return ONLY a raw JSON object, no markdown, no explanation, no backticks:
+{"pka":"...","uv":"...","sol":"...","bcs":"...","dclass":"...","syns":"...","stab":"...","iupac":"..."}
+
+Rules:
+- For pKa: include value AND type e.g. "9.38 (phenol-OH, acidic)" or "8.6 (basic amine)"
+- For uv: lambda-max in nm e.g. "243, 293 nm"
+- For sol: aqueous solubility e.g. "14 mg/mL (water)"
+- For bcs: Class I, II, III, or IV
+- For dclass: pharmacological class e.g. "NSAID / Analgesic"
+- For syns: trade names e.g. "Advil, Nurofen, Motrin"
+- For stab: key degradation pathways e.g. "Hydrolysis; oxidation; photodegradation"
+- For iupac: IUPAC name
+- If genuinely unknown, write "Not established"
+- Return ONLY the JSON, nothing else`;
+
+const FULL_SYS = `You are a pharmaceutical chemistry expert. Return complete physicochemical data for the given drug from your knowledge.
+
+Return ONLY a raw JSON object, no markdown, no backticks:
+{"iupac":"...","formula":"...","mw":"... g/mol","smiles":"...","logp":"...","pka":"... (type)","hbond":"X donors / Y acceptors","tpsa":"... A2","uv":"... nm","sol":"...","bcs":"Class ...","dclass":"...","syns":"...","stab":"..."}
+
+If any value is unknown, write "Not established". Return ONLY the JSON.`;
+
+let fetchInProgress = false;
+
+async function fetchLive(drugName) {
+  if (!drugName || fetchInProgress) return;
+  fetchInProgress = true;
+
+  const bar = document.getElementById('fetchBar');
+  const msg = document.getElementById('fetchMsg');
+  const runBtn = document.getElementById('runBtn');
+
+  // Reset UI
+  bar.style.cssText = 'display:flex;align-items:center;gap:.6rem;font-family:Space Mono,monospace;font-size:.68rem;padding:.55rem .9rem;border-radius:8px;margin-bottom:.85rem;border:1px solid rgba(0,229,200,.25);color:var(--accent);background:rgba(0,229,200,.04);';
+  msg.textContent = `Fetching data for "${drugName}" from PubChem…`;
+  runBtn.disabled = true;
+
+  ['mw','formula','logp','pka','hbond','tpsa','sol','uv','bcs','dclass','smiles','syns','stab'].forEach(id => {
+    const f = document.getElementById(id);
+    if (f) { f.value = ''; f.classList.remove('af'); }
+  });
+  document.getElementById('banner').classList.remove('show');
+  document.getElementById('pcDot').classList.add('off');
+
+  try {
+    // ── STAGE 1: PubChem REST via CORS proxy ──────────────────
+    let pubchemData = null;
+    try {
+      msg.textContent = `Querying PubChem for "${drugName}"…`;
+
+      // Step 1a: Get CID
+      const cidUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(drugName)}/cids/JSON`;
+      const cidResp = await fetch(CORS + encodeURIComponent(cidUrl), { signal: AbortSignal.timeout(6000) });
+      const cidJson = JSON.parse((await cidResp.json()).contents);
+      const cid = cidJson.IdentifierList?.CID?.[0];
+      if (!cid) throw new Error('CID not found');
+
+      msg.textContent = `Found CID ${cid} — loading properties…`;
+
+      // Step 1b: Get all properties in one call
+      const props = 'MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,XLogP,HBondDonorCount,HBondAcceptorCount,TPSA,ExactMass';
+      const propUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/property/${props}/JSON`;
+      const propResp = await fetch(CORS + encodeURIComponent(propUrl), { signal: AbortSignal.timeout(6000) });
+      const propJson = JSON.parse((await propResp.json()).contents);
+      const p = propJson.PropertyTable?.Properties?.[0];
+      if (!p) throw new Error('No properties returned');
+
+      // Step 1c: Get synonyms
+      let synList = '';
+      try {
+        const synUrl = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/synonyms/JSON`;
+        const synResp = await fetch(CORS + encodeURIComponent(synUrl), { signal: AbortSignal.timeout(4000) });
+        const synJson = JSON.parse((await synResp.json()).contents);
+        const syns = synJson.InformationList?.Information?.[0]?.Synonym || [];
+        synList = syns.slice(0, 6).join(', ');
+      } catch(e) { /* synonyms optional */ }
+
+      pubchemData = {
+        iupac:   p.IUPACName || '',
+        formula: p.MolecularFormula || '',
+        mw:      p.MolecularWeight ? p.MolecularWeight + ' g/mol' : '',
+        smiles:  p.CanonicalSMILES || '',
+        logp:    p.XLogP !== undefined ? String(p.XLogP) : '',
+        hbond:   (p.HBondDonorCount !== undefined && p.HBondAcceptorCount !== undefined)
+                   ? `${p.HBondDonorCount} donors / ${p.HBondAcceptorCount} acceptors` : '',
+        tpsa:    p.TPSA !== undefined ? `${p.TPSA} A2` : '',
+        syns:    synList,
+        cid:     cid
+      };
+      msg.textContent = `PubChem data loaded (CID ${cid}) — enriching with pharmaceutical data…`;
+    } catch(pubErr) {
+      msg.textContent = `PubChem unavailable — using pharmaceutical knowledge base…`;
+    }
+
+    // ── STAGE 2: Enrich missing fields via Claude (fast, no web search) ──
+    let enriched = {};
+    if (pubchemData) {
+      // We have structural data — only need pKa, UV, BCS, stability, drug class
+      const known = Object.entries(pubchemData).filter(([k,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n');
+      const enrichRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 400,
+          system: ENRICH_SYS,
+          messages: [{ role: 'user', content: `Drug: ${drugName}\n\nAlready known from PubChem:\n${known}\n\nFill in the missing pharmaceutical fields: pKa, UV lambda-max, aqueous solubility, BCS class, drug class, trade names/synonyms (if not already filled), stability/degradation pathways, and IUPAC name (if missing).` }]
+        })
+      });
+      const enrichData = await enrichRes.json();
+      const rawText = enrichData.content?.map(b => b.text || '').join('').replace(/```\w*\s*/g,'').trim();
+      const m = rawText.match(/\{[\s\S]*\}/);
+      if (m) enriched = JSON.parse(m[0]);
+    } else {
+      // No PubChem — get everything from Claude knowledge (still fast, no web search)
+      msg.textContent = `Using pharmaceutical knowledge base for "${drugName}"…`;
+      const fullRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 600,
+          system: FULL_SYS,
+          messages: [{ role: 'user', content: `Provide complete pharmaceutical physicochemical data for: ${drugName}` }]
+        })
+      });
+      const fullData = await fullRes.json();
+      const rawText = fullData.content?.map(b => b.text || '').join('').replace(/```\w*\s*/g,'').trim();
+      const m = rawText.match(/\{[\s\S]*\}/);
+      if (m) enriched = JSON.parse(m[0]);
+    }
+
+    // ── Merge PubChem + enriched data (PubChem values take priority) ──
+    const merged = { ...enriched, ...(pubchemData||{}) };
+    // For fields not in pubchemData, use enriched
+    ['pka','uv','sol','bcs','dclass','stab','iupac'].forEach(k => {
+      if (!merged[k] || merged[k] === '') merged[k] = enriched[k] || '';
+    });
+    if (!merged.syns && enriched.syns) merged.syns = enriched.syns;
+
+    // Fill the form
+    document.getElementById('drugName').classList.add('found');
+    const srcLabel = pubchemData ? `PubChem CID ${pubchemData.cid} + Knowledge Base` : 'Pharmaceutical Knowledge Base';
+    fillFields(merged, srcLabel, pubchemData ? 'PubChem' : 'AI');
+
+    msg.textContent = `✓ Data loaded for "${drugName}" — ${pubchemData ? 'PubChem verified' : 'knowledge base'}. Review fields before running.`;
+    bar.style.borderColor = 'rgba(16,185,129,.35)';
+    bar.style.color = 'var(--ok)';
+    bar.style.background = 'rgba(16,185,129,.04)';
+    setTimeout(() => { bar.style.display = 'none'; }, 4000);
+
+  } catch(err) {
+    msg.textContent = `Fetch failed for "${drugName}" — please fill fields manually then run analysis.`;
+    bar.style.borderColor = 'rgba(239,68,68,.3)';
+    bar.style.color = '#fca5a5';
+    bar.style.background = 'rgba(239,68,68,.04)';
+    setTimeout(() => { bar.style.display = 'none'; }, 6000);
+  } finally {
+    fetchInProgress = false;
+    runBtn.disabled = false;
+  }
+}
+
+/* ── onBlur trigger for live fetch if drug not in local DB ── */
+function onDrugBlur(){
+  setTimeout(()=>{
+    hideDrop();
+    const name=document.getElementById('drugName').value.trim();
+    if(!name)return;
+    // Only fetch live if fields are still empty (not filled by local pick)
+    const mwVal=document.getElementById('mw').value;
+    if(!mwVal&&name){
+      fetchLive(name);
+    }
+  },250);
+}
+
+/* ══════════════════════ API + RENDER ══════════════════════ */
+const STEPS=['Profiling','Method Design','Impurity','Optimization','Evaluation','Green Chem','Validation'];
+const TITLES=['Physicochemical Profiling','Mechanism-Based Method Design','Impurity & Degradation Strategy','5-Trial Optimization Matrix','Comparative Evaluation','Green Chemistry Evaluation','Validation Readiness (ICH Q2(R2) / USP 621)'];
+
+/* Single call — scientifically correct method type selection */
+const SYS_MAIN=`You are an expert pharmaceutical HPLC scientist with deep knowledge of USP, ICH Q2(R2), and industrial QC method development.
+
+FORMAT: Each section starts with its number and pipe character exactly like this (no spaces before):
+1| content here
+2| content here
+...up to 7|
+
+Keep each section SHORT — 4 to 7 bullet points. Summary style. Use hyphen bullets. No hash symbols. No markdown headers. Be direct and specific to the drug.
+
+CRITICAL SCIENTIFIC RULE — METHOD TYPE SELECTION:
+You MUST decide isocratic vs gradient based on the drug properties. Do NOT default to gradient.
+
+ISOCRATIC method is correct when:
+- Single API assay for routine QC (one main peak needed)
+- LogP between 0 and 3 with no complex impurity profile
+- Drug has narrow polarity range
+- USP/BP monograph uses isocratic for that drug
+- Simple formulation assay (tablets, capsules)
+Use isocratic: fixed % organic:aqueous, e.g. "ACN:buffer 30:70 isocratic"
+
+GRADIENT method is correct when:
+- Stability-indicating method (multiple degradants expected)
+- LogP > 4 OR highly lipophilic with polar impurities
+- Multiple APIs in combination product
+- Impurity profiling with unknown impurities
+- Wide polarity range of analytes
+
+STEP ELUTION is correct when:
+- Two clearly separated analyte groups with very different polarity
+
+Section topics:
+1| Physicochemical Profiling: key functional groups, LogP value, ionization from pKa via Henderson-Hasselbalch, UV lambda-max, solubility, BCS class implications for method.
+2| Method Design: FIRST STATE whether isocratic or gradient and WHY based on the LogP/impurity profile. Then: HPLC mode, column, pH justified by pKa, buffer, organic modifier, expected k and alpha. Give the exact recommended starting composition (e.g. ACN:10mM AmAc pH 4.5 = 35:65 isocratic OR gradient 5-80% ACN over 12 min).
+3| Impurity Strategy: degradation pathways (hydrolysis/oxidation/photolysis) specific to functional groups, known process impurities if any, Rs target >= 2.0, column/pH adjustments for separation.
+4| Trial Matrix Rationale: explain the 5 trial types chosen — which are isocratic, which are gradient, and why this mix is appropriate for this specific drug.
+5| Comparative Evaluation: best trial for Routine QC assay, best for Stability-indicating/impurity profiling, best for LC-MS, best for cost efficiency. One line each with reasoning.
+6| Green Chemistry: AGREE/NEMI assessment, solvent toxicity ranking, most sustainable trial, waste volume comparison.
+7| Validation Readiness (ICH Q2R2 / USP 621): Accuracy 98-102%, Precision RSD <2.0%, Linearity r2 >0.999 with range, critical robustness parameters (pH +-0.2, flow +-0.1, temp +-5C), SST: N>2000, T<2.0, Rs>2.0, %RSD<2.0 for 6 injections.
+
+Write ONLY the 7 sections using 1| through 7| format. No JSON. No code blocks. No extra text.`;
+
+function buildDrugContext(){
+  const g=id=>(document.getElementById(id)||{}).value?.trim()||'';
+  let m=`Drug: ${g('drugName')}`;
+  [['mw','MW'],['formula','Formula'],['logp','LogP'],['pka','pKa'],
+   ['hbond','HBond'],['tpsa','TPSA'],['uv','UV'],['sol','Solubility'],
+   ['bcs','BCS'],['dclass','Drug Class'],['stab','Stability'],['notes','Notes']
+  ].forEach(([id,lbl])=>{const v=g(id);if(v)m+=`\n${lbl}: ${v}`;});
+  return m;
+}
+
+function callAPI(system,userMsg,maxTok){
+  return fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,system,
+      messages:[{role:'user',content:userMsg}]})
+  }).then(r=>r.ok?r.json():r.json().then(e=>{throw new Error(e.error?.message||`HTTP ${r.status}`);}))
+   .then(d=>d.content.map(b=>b.text||'').join('').trim());
+}
+
+/* Dedicated system prompt for JSON trials — driven by S1+S2 analysis */
+const SYS_JSON=`You are a pharmaceutical HPLC expert generating an optimized 5-trial method matrix.
+
+You will receive:
+1. Drug physicochemical data
+2. Section 1 (Physicochemical Profiling) — already analyzed
+3. Section 2 (Method Design) — already decided HPLC mode, column, pH, buffer, organic modifier
+
+YOUR JOB: Generate exactly 5 OPTIMIZED trials that are DIRECT VARIATIONS of the method design in Section 2.
+- T1 must use the EXACT column, pH, buffer and composition recommended in Section 2 (this is the primary recommended method)
+- T2-T5 are systematic optimizations varying ONE parameter at a time from T1 (column length, particle size, organic%, pH, column chemistry, flow rate)
+- If Section 2 recommends isocratic → T1,T2,T3 must be isocratic; T4 gradient MS-compatible; T5 green isocratic
+- If Section 2 recommends gradient → T1,T2 gradient; T3 selectivity variant; T4 MS-compatible gradient; T5 green
+- pH values MUST be calculated from the pKa in Section 1 using Henderson-Hasselbalch (suppress ionization: pH = pKa ± 2)
+- Detection wavelength MUST match the UV λmax from Section 1
+- Retention times MUST be realistic based on LogP and organic% chosen
+- N_plates, tailing_factor, Rs MUST be realistic (N: 5000-18000, T: 1.0-1.5, Rs: 2.0-5.0)
+
+Return ONLY a valid JSON object, no markdown fences, no explanation:
+{"trials":[
+{"name":"T1 - Primary Method (Section 2 Recommendation)","method_type":"isocratic or gradient","column":"exact column from S2","mobile_phase_a":"exact buffer from S2","mobile_phase_b":"exact organic from S2","gradient":"exact composition from S2","pH":"calculated from pKa","flow_rate":"from S2","temperature":"30C","injection_volume":"10uL","detection":"UV λmax from S1","N_plates":"realistic value","tailing_factor":"1.0-1.2","resolution_Rs":"2.5-4.0","asymmetry":"1.0-1.2","retention_time_api":"realistic min","run_time":"realistic min","rationale":"Primary method directly from S2 method design"},
+{"name":"T2 - Optimized Column Length","method_type":"same as T1","column":"longer or shorter column variant","mobile_phase_a":"same as T1","mobile_phase_b":"same as T1","gradient":"same ratio as T1","pH":"same as T1","flow_rate":"same or adjusted","temperature":"35C","injection_volume":"10uL","detection":"same as T1","N_plates":"higher than T1","tailing_factor":"1.0-1.15","resolution_Rs":"3.0-4.5","asymmetry":"1.0-1.1","retention_time_api":"realistic min","run_time":"realistic min","rationale":"Longer column improves N and Rs for better impurity resolution"},
+{"name":"T3 - pH Optimization","method_type":"same as T1","column":"same as T1","mobile_phase_a":"same buffer different pH","mobile_phase_b":"same as T1","gradient":"same as T1","pH":"pKa +/- 1.5 variant","flow_rate":"same as T1","temperature":"30C","injection_volume":"10uL","detection":"same as T1","N_plates":"realistic","tailing_factor":"1.0-1.3","resolution_Rs":"2.5-4.0","asymmetry":"1.0-1.2","retention_time_api":"realistic min","run_time":"realistic min","rationale":"pH adjustment based on Henderson-Hasselbalch to optimize ionization and peak shape"},
+{"name":"T4 - MS Compatible UHPLC","method_type":"gradient","column":"BEH C18 or equivalent 100x2.1mm 1.8um","mobile_phase_a":"5mM Ammonium Formate at calculated pH","mobile_phase_b":"ACN","gradient":"optimized gradient based on S2 composition","pH":"same as T1 with volatile buffer","flow_rate":"0.3 mL/min","temperature":"40C","injection_volume":"2uL","detection":"same as T1","N_plates":"10000-15000","tailing_factor":"1.0-1.1","resolution_Rs":"3.0-5.0","asymmetry":"1.0-1.1","retention_time_api":"realistic min","run_time":"8-12 min","rationale":"UHPLC scale with volatile formate buffer for LC-MS/MS compatibility"},
+{"name":"T5 - Green Chemistry","method_type":"isocratic","column":"shorter C18 100x4.6mm 3.5um","mobile_phase_a":"10mM Ammonium Acetate at same pH as T1","mobile_phase_b":"Ethanol","gradient":"EtOH:buffer ratio equivalent to T1 organic%","pH":"same as T1","flow_rate":"0.6 mL/min","temperature":"30C","injection_volume":"5uL","detection":"same as T1","N_plates":"5000-8000","tailing_factor":"1.1-1.3","resolution_Rs":"2.0-3.0","asymmetry":"1.1-1.3","retention_time_api":"realistic min","run_time":"15-20 min","rationale":"Ethanol replaces ACN, low flow rate, minimal waste — AGREE/NEMI compliant"}
+],"green_scores":[
+{"trial":"T1 - Primary Method (Section 2 Recommendation)","score":5,"rationale":"Standard ACN/MeOH use, moderate solvent volume"},
+{"trial":"T2 - Optimized Column Length","score":4,"rationale":"Longer run time increases total solvent consumption"},
+{"trial":"T3 - pH Optimization","score":6,"rationale":"Same solvent as T1, pH change only, no waste increase"},
+{"trial":"T4 - MS Compatible UHPLC","score":7,"rationale":"Very low flow 0.3mL/min, micro-bore column, minimal waste"},
+{"trial":"T5 - Green Chemistry","score":9,"rationale":"Ethanol replaces ACN (safer, renewable), low flow, isocratic minimal waste"}
+]}
+
+CRITICAL: Replace ALL placeholder values with real calculated values based on the drug data and S1/S2 analysis provided. Every number must be scientifically justified.`;
+
+async function run(){
+  const dn=document.getElementById('drugName').value.trim();
+  if(!dn){showErr('Please enter a drug name first.');return;}
+  hideErr();
+  hideRateLimit();
+  document.getElementById('out').innerHTML='';
+  document.getElementById('out').classList.remove('show');
+  const btn=document.getElementById('runBtn');
+  btn.disabled=true;btn.classList.add('ld');
+  document.getElementById('btnTxt').textContent='Analyzing…';
+  initProg();
+  const timers=STEPS.map((_,i)=>setTimeout(()=>setProg(i),i*2000+400));
+  try{
+    const ctx=buildDrugContext();
+
+    // Step 1: Get text sections first (S1 and S2 drive the trial design)
+    setProg(0);
+    const textRaw=await callAPI(SYS_MAIN,
+      ctx+'\n\nGenerate the 7-section HPLC summary using 1| 2| ... 7| format only. Do NOT include any JSON in this response.',
+      3000);
+
+    // Step 2: Extract S1 and S2 from text response
+    const secLines=textRaw.split('\n');
+    const tempMap={};
+    let curS=0, buf2=[];
+    for(const ln of secLines){
+      const m=ln.match(/^([1-7])\|\s*(.*)/);
+      if(m){if(curS>0&&buf2.length)tempMap[curS]=buf2.join('\n').trim();curS=+m[1];buf2=[m[2]];}
+      else if(curS>0)buf2.push(ln);
+    }
+    if(curS>0&&buf2.length)tempMap[curS]=buf2.join('\n').trim();
+
+    const s1Text=tempMap[1]||'';
+    const s2Text=tempMap[2]||'';
+
+    // Step 3: JSON call using S1+S2 as scientific basis
+    setProg(3);
+    const jsonMsg=`Drug physicochemical data:
+${ctx}
+
+SECTION 1 - Physicochemical Profiling (already analyzed):
+${s1Text}
+
+SECTION 2 - Method Design (already decided):
+${s2Text}
+
+Using the above S1 and S2 analysis as the strict scientific basis, generate the optimized 5-trial JSON. T1 must exactly implement the S2 recommendation. T2-T5 are systematic parameter variations. All pH, UV, and retention time values must be derived from S1 data. Return raw JSON only.`;
+
+    const jsonRaw=await callAPI(SYS_JSON, jsonMsg, 2000);
+
+    timers.forEach(clearTimeout);finProg();
+    renderOut(textRaw,jsonRaw,dn);
+  }catch(e){
+    timers.forEach(clearTimeout);
+    const msg=e.message||'';
+    const isRateLimit=msg.toLowerCase().includes('exceeded')||msg.includes('529')||msg.toLowerCase().includes('rate');
+    if(isRateLimit){showRateLimit();}
+    else{showErr('Error: '+msg);}
+  }finally{
+    btn.disabled=false;btn.classList.remove('ld');
+    document.getElementById('btnTxt').textContent='⚗ Generate HPLC Method Strategy';
+  }
+}
+
+function renderOut(textRaw,jsonRaw,drug){
+  /* 1. Parse JSON from dedicated jsonRaw */
+  let trials=[],green=[];
+  try{
+    let j=(jsonRaw||'').replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/,'').trim();
+    const p=JSON.parse(j);
+    trials=p.trials||[];green=p.green_scores||[];
+  }catch(e){
+    try{const m=(jsonRaw||'').match(/\{[\s\S]*\}/);if(m){const p=JSON.parse(m[0]);trials=p.trials||[];green=p.green_scores||[];}}catch(e2){}
+  }
+  /* Also try extracting from textRaw as fallback */
+  if(!trials.length){
+    try{const jm=textRaw.match(/```json\s*([\s\S]*?)```/i);if(jm){const p=JSON.parse(jm[1].trim());trials=p.trials||[];green=p.green_scores||[];}}catch(e){}
+  }
+
+  /* 2. Remove any JSON blocks from text */
+  const noJson=textRaw.replace(/```json[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/gi,'').trim();
+
+  /* 2. Parse sections by "N|" prefix — works regardless of surrounding whitespace */
+  const secMap={};
+  // Split on lines starting with digit|
+  const lines=noJson.split('\n');
+  let curSec=0, buf=[];
+  for(const line of lines){
+    const m=line.match(/^([1-7])\|\s*(.*)/);
+    if(m){
+      if(curSec>0&&buf.length) secMap[curSec]=buf.join('\n').trim();
+      curSec=parseInt(m[1]);
+      buf=[m[2]];
+    } else if(curSec>0){
+      buf.push(line);
+    }
+  }
+  if(curSec>0&&buf.length) secMap[curSec]=buf.join('\n').trim();
+
+  /* Fallback: if we got less than 4 sections, try splitting by "Step N" */
+  if(Object.keys(secMap).length<4){
+    const stepRe=/(?:^|\n)(?:Step\s+)?([1-7])[\.\:\)]\s*/gm;
+    let m2,last=0,lastN=0;
+    const hits=[];
+    while((m2=stepRe.exec(noJson))!==null) hits.push({n:+m2[1],idx:m2.index+m2[0].length});
+    hits.forEach((h,i)=>{
+      if(!secMap[h.n]) secMap[h.n]=noJson.slice(h.idx,hits[i+1]?.idx||noJson.length).trim();
+    });
+  }
+
+  /* Last resort: equal chunks */
+  if(Object.keys(secMap).length<4){
+    const paras=noJson.split(/\n{2,}/).filter(p=>p.trim());
+    const sz=Math.max(1,Math.ceil(paras.length/7));
+    for(let i=0;i<7;i++) if(!secMap[i+1]) secMap[i+1]=paras.slice(i*sz,(i+1)*sz).join('\n\n');
+  }
+
+  /* 3. Build HTML */
+  let html=`<div class="sumbox">
+    <div class="st">Analysis Complete — ${safeText(drug)}</div>
+    <div style="font-size:.83rem;color:var(--text);line-height:1.5;">7-step HPLC strategy · ICH Q2(R2) · USP 621</div>
+    <div class="tagrow">
+      <span class="tag">RP-HPLC</span><span class="tag">ICH Q2(R2)</span>
+      <span class="tag">USP 621</span><span class="tag">Green Chem</span>
+      <span class="tag">5-Trial Matrix</span><span class="tag">Validation Ready</span>
+    </div>
+  </div>`;
+
+  for(let i=0;i<7;i++){
+    const n=i+1;
+    const content=secMap[n]||'';
+
+    let body='';
+
+    if(i===3){
+      // Step 4: TABLE ONLY — no text, just the trials table
+      body = trials.length
+        ? trialsTable(trials)
+        : '<p style="color:var(--muted);">Trial data not available.</p>';
+    } else if(i===5){
+      // Step 6: text summary + green table
+      body = content ? textToHtml(content) : '';
+      if(green.length) body += greenBars(green);
+    } else {
+      body = content
+        ? textToHtml(content)
+        : '<p style="color:var(--muted);font-size:.82rem;">No content received.</p>';
+    }
+
+    html+=`<div class="scard op" id="SC${n}">
+      <div class="shdr" onclick="tog(${n})">
+        <span class="snum">STEP ${n}</span>
+        <span class="stitle">${TITLES[i]}</span>
+        <span class="schev">▾</span>
+      </div>
+      <div class="sbody"><div class="ca">${body}</div></div>
+    </div>`;
+  }
+
+  const el=document.getElementById('out');
+  el.innerHTML=html;el.classList.add('show');
+
+  // Show PDF export bar — drug already available as function parameter
+  document.getElementById('pdfTitle').textContent=`Report Ready — ${drug}`;
+  document.getElementById('pdfBar').classList.add('visible');
+
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function exportPDF(){
+  // Collect all data from current state
+  const drug = document.getElementById('drugName').value.trim() || 'Drug';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const fname = 'HPLC_Report_' + drug.replace(/\s+/g,'_') + '_' + now.getFullYear() + '.pdf';
+
+  // Gather physicochemical fields
+  const pcFields = [
+    ['mw','Molecular Weight'],['formula','Molecular Formula'],['logp','LogP'],
+    ['pka','pKa'],['hbond','H-Bond D/A'],['tpsa','TPSA'],['uv','UV λmax'],
+    ['sol','Solubility'],['bcs','BCS Class'],['dclass','Drug Class'],
+    ['stab','Stability']
+  ];
+  const pcData = pcFields.map(([id,lbl])=>{
+    const v = (document.getElementById(id)||{}).value?.trim();
+    return v ? {label:lbl, value:v} : null;
+  }).filter(Boolean);
+
+  // Gather section text content
+  const sections = [];
+  for(let i=1;i<=7;i++){
+    const card = document.getElementById('SC'+i);
+    if(!card) continue;
+    const title = card.querySelector('.stitle')?.textContent||'Step '+i;
+    const body = card.querySelector('.ca');
+    if(!body) continue;
+    // Get text content, skip tables (handled separately)
+    const textNodes = [];
+    body.querySelectorAll('p,li,div.csub').forEach(el=>{
+      const t = el.textContent.trim();
+      if(t && t.length>2) textNodes.push(t);
+    });
+    sections.push({num:i, title, lines: textNodes.slice(0,30)});
+  }
+
+  // Gather trial table data
+  const trialRows = [];
+  const trialTable = document.querySelector('.ttable tbody');
+  if(trialTable){
+    trialTable.querySelectorAll('tr').forEach(row=>{
+      const cells = [...row.querySelectorAll('td')].map(td=>td.textContent.trim().replace(/\n+/g,' ').substring(0,35));
+      if(cells.length) trialRows.push(cells);
+    });
+  }
+  const trialHeaders = [];
+  const trialHead = document.querySelector('.ttable thead tr');
+  if(trialHead) trialHead.querySelectorAll('th').forEach(th=>trialHeaders.push(th.textContent.trim()));
+
+  // Gather green scores
+  const greenRows = [];
+  const greenTable = document.querySelector('.gtable tbody');
+  if(greenTable){
+    greenTable.querySelectorAll('tr').forEach(row=>{
+      const cells = [...row.querySelectorAll('td')].map(td=>td.textContent.trim().replace(/\n+/g,' ').substring(0,60));
+      if(cells.length) greenRows.push(cells);
+    });
+  }
+
+  // ── Build PDF using raw PDF syntax ──
+  const pages = [];
+  let lines = []; // current page lines buffer: {type,text,x,y,size,color,bold}
+
+  // PDF builder helper
+  const W=595, H=842, ML=40, MR=555, MT=50;
+  let y = MT;
+  let pageStreams = [];
+
+  function newPage(){
+    pageStreams.push(lines);
+    lines = [];
+    y = MT;
+  }
+
+  function checkY(needed=20){
+    if(y + needed > H-50){ newPage(); addPageHeader(); }
+  }
+
+  function addLine(text, size=10, bold=false, color='0 0 0', indent=0){
+    checkY(size+4);
+    lines.push({text: String(text).replace(/[()\\]/g,' '), x:ML+indent, y, size, bold, color});
+    y += size + 4;
+  }
+
+  function addWrappedText(text, size=9, color='0.2 0.2 0.2', indent=0, maxWidth=480){
+    const words = String(text).replace(/[()\\]/g,' ').split(' ');
+    let line = '';
+    const charsPerLine = Math.floor(maxWidth / (size * 0.52));
+    words.forEach(w=>{
+      if((line+' '+w).trim().length > charsPerLine){
+        checkY(size+3);
+        lines.push({text:line.trim(), x:ML+indent, y, size, bold:false, color});
+        y += size+3;
+        line = w;
+      } else {
+        line = (line+' '+w).trim();
+      }
+    });
+    if(line.trim()){
+      checkY(size+3);
+      lines.push({text:line.trim(), x:ML+indent, y, size, bold:false, color});
+      y += size+3;
+    }
+  }
+
+  function addRect(rx,ry,rw,rh,fill='0.95 0.97 1'){
+    lines.push({type:'rect', x:rx, y:ry, w:rw, h:rh, fill});
+  }
+
+  function addHLine(ly, color='0.85 0.85 0.85'){
+    lines.push({type:'line', x1:ML, y1:ly, x2:MR, y2:ly, color});
+  }
+
+  function addPageHeader(){
+    lines.push({type:'rect', x:0, y:0, w:W, h:28, fill:'0.04 0.05 0.06'});
+    lines.push({type:'rect', x:0, y:0, w:W, h:1.5, fill:'0 0.9 0.78'});
+    lines.push({text:'HPLC Method Development Report  |  '+drug+'  |  '+dateStr, x:ML, y:18, size:8, bold:true, color:'0.85 0.92 0.94'});
+    lines.push({text:'ICH Q2(R2) | USP <621>', x:MR, y:18, size:7, bold:false, color:'0.4 0.5 0.55', align:'right'});
+    y = 42;
+  }
+
+  // ── PAGE 1: Cover ──
+  lines.push({type:'rect', x:0, y:0, w:W, h:H, fill:'0.04 0.05 0.06'});
+  lines.push({type:'rect', x:0, y:0, w:W, h:2, fill:'0 0.9 0.78'});
+  lines.push({type:'rect', x:0, y:H-2, w:W, h:2, fill:'0.48 0.23 0.93'});
+
+  lines.push({text:'AI-POWERED ANALYTICAL CHEMISTRY ENGINE', x:W/2, y:120, size:8, bold:false, color:'0 0.9 0.78', align:'center'});
+  lines.push({text:'HPLC Method Development', x:W/2, y:155, size:26, bold:true, color:'0.88 0.93 0.96', align:'center'});
+  lines.push({text:'Report', x:W/2, y:185, size:26, bold:true, color:'0.88 0.93 0.96', align:'center'});
+  lines.push({text:'ICH Q2(R2) Compliant  |  USP <621>  |  Green Analytical Chemistry', x:W/2, y:210, size:9, bold:false, color:'0.4 0.5 0.6', align:'center'});
+
+  // Drug name box
+  lines.push({type:'rect', x:ML, y:240, w:MR-ML, h:55, fill:'0.06 0.07 0.09'});
+  lines.push({type:'rect', x:ML, y:240, w:3, h:55, fill:'0 0.9 0.78'});
+  lines.push({text:'Drug:', x:ML+15, y:262, size:8, bold:false, color:'0 0.9 0.78'});
+  lines.push({text:drug.toUpperCase(), x:ML+50, y:262, size:16, bold:true, color:'0.88 0.93 0.96'});
+  lines.push({text:'Date: '+dateStr+'   |   Generated by HPLC Method Dev AI', x:ML+15, y:284, size:8, bold:false, color:'0.4 0.5 0.6'});
+
+  // PC data on cover
+  let pcY = 320;
+  lines.push({text:'PHYSICOCHEMICAL PROFILE', x:ML, y:pcY, size:7, bold:true, color:'0 0.9 0.78'});
+  pcY += 16;
+  lines.push({type:'rect', x:ML, y:pcY-12, w:MR-ML, h:pcData.length>6?70:40, fill:'0.06 0.07 0.09'});
+  let pcX = ML+8; let pcRow = pcY;
+  pcData.forEach((p,idx)=>{
+    const txt = p.label+': '+p.value.substring(0,28);
+    if(pcX + txt.length*4.5 > MR-20){ pcX=ML+8; pcRow+=18; }
+    lines.push({text:txt, x:pcX, y:pcRow, size:7, bold:false, color:'0.56 0.64 0.72'});
+    pcX += txt.length*4.5 + 15;
+  });
+
+  // Section list on cover
+  const secY = pcRow + 40;
+  lines.push({text:'REPORT CONTENTS', x:ML, y:secY, size:7, bold:true, color:'0 0.9 0.78'});
+  const secNames=['Physicochemical Profiling','Mechanism-Based Method Design','Impurity & Degradation Strategy',
+    '5-Trial Optimization Matrix (Full Table)','Comparative Evaluation','Green Chemistry Evaluation','Validation Readiness (ICH Q2R2)'];
+  secNames.forEach((s,i)=>{
+    lines.push({text:'Step '+(i+1)+':  '+s, x:ML+10, y:secY+18+(i*14), size:8, bold:false, color:'0.7 0.78 0.86'});
+  });
+
+  // ── PAGE 2+: Sections ──
+  newPage();
+  addPageHeader();
+
+  sections.forEach((sec,si)=>{
+    checkY(30);
+    // Section header
+    addRect(ML, y-2, MR-ML, 20, '0.06 0.08 0.11');
+    lines.push({type:'rect', x:ML, y:y-2, w:4, h:20, fill:'0 0.9 0.78'});
+    lines.push({text:'STEP '+sec.num+'  |  '+sec.title.toUpperCase(), x:ML+12, y:y+11, size:9, bold:true, color:'0 0.9 0.78'});
+    y += 26;
+
+    // Section text
+    sec.lines.forEach(ln=>{
+      if(ln.startsWith('-')||ln.startsWith('•')){
+        addWrappedText('• '+ln.replace(/^[-•]\s*/,''), 8.5, '0.7 0.78 0.86', 10);
+      } else {
+        addWrappedText(ln, 8.5, '0.75 0.8 0.88', 0);
+      }
+    });
+
+    // Trial table for step 4
+    if(sec.num===4 && trialRows.length){
+      checkY(40);
+      y+=6;
+      lines.push({text:'5-TRIAL OPTIMIZATION MATRIX', x:ML, y, size:8, bold:true, color:'0 0.9 0.78'});
+      y+=14;
+
+      const colW = [80,70,70,60,30,35,30,30,35,32,30,30,40,35];
+      const visibleCols = Math.min(colW.length, trialHeaders.length);
+
+      // Table header
+      addRect(ML, y-2, MR-ML, 14, '0.04 0.08 0.1');
+      let tx = ML+2;
+      trialHeaders.slice(0,visibleCols).forEach((h,ci)=>{
+        lines.push({text:h.substring(0,14), x:tx, y:y+9, size:6, bold:true, color:'0 0.9 0.78'});
+        tx += colW[ci]||40;
+      });
+      y += 16;
+
+      trialRows.forEach((row,ri)=>{
+        checkY(16);
+        if(ri%2===0) addRect(ML, y-2, MR-ML, 14, '0.055 0.07 0.09');
+        let rx = ML+2;
+        row.slice(0,visibleCols).forEach((cell,ci)=>{
+          lines.push({text:cell.substring(0,16), x:rx, y:y+9, size:6, bold:false, color:'0.72 0.8 0.88'});
+          rx += colW[ci]||40;
+        });
+        y += 16;
+      });
+      y += 8;
+    }
+
+    // Green table for step 6
+    if(sec.num===6 && greenRows.length){
+      checkY(40);
+      y+=6;
+      lines.push({text:'GREEN SCORE TABLE', x:ML, y, size:8, bold:true, color:'0 0.73 0.55'});
+      y+=14;
+
+      addRect(ML, y-2, MR-ML, 14, '0.04 0.1 0.07');
+      ['Trial','Score','Rating','Assessment'].forEach((h,ci)=>{
+        lines.push({text:h, x:ML+2+[0,140,175,220][ci], y:y+9, size:7, bold:true, color:'0.13 0.73 0.54'});
+      });
+      y+=16;
+
+      greenRows.forEach((row,ri)=>{
+        checkY(16);
+        if(ri%2===0) addRect(ML, y-2, MR-ML, 14, '0.045 0.08 0.06');
+        [0,140,175,220].forEach((ox,ci)=>{
+          const txt = (row[ci]||'').substring(0,ci===3?45:22);
+          lines.push({text:txt, x:ML+2+ox, y:y+9, size:6.5, bold:false, color:'0.65 0.8 0.72'});
+        });
+        y+=16;
+      });
+    }
+
+    addHLine(y+4);
+    y+=14;
+  });
+
+  // ── Serialize pages to PDF ──
+  pageStreams.push(lines); // push last page
+  const nPages = pageStreams.length;
+  const objList = [];
+  let body = '';
+  const offsets = [];
+
+  function addObj(content){
+    offsets.push(body.length);
+    const n = offsets.length;
+    body += n+' 0 obj\n'+content+'\nendobj\n';
+    return n;
+  }
+
+  // obj 1: catalog (placeholder, filled later)
+  // obj 2: pages (placeholder)
+  // Build font
+  addObj('<< /Type /Catalog /Pages 2 0 R >>'); // 1
+  const pagesObjIdx = 2;
+  addObj(''); // 2 placeholder
+
+  const fontObj = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'); // 3
+  const fontBObj = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'); // 4
+
+  const pageObjIds = [];
+
+  pageStreams.forEach((pgLines, pi)=>{
+    let stream = '';
+
+    pgLines.forEach(cmd=>{
+      if(cmd.type==='rect'){
+        const fy = H-cmd.y-cmd.h;
+        stream += `${cmd.fill} rg ${cmd.x} ${fy} ${cmd.w} ${cmd.h} re f\n`;
+        stream += `0 0 0 rg\n`;
+      } else if(cmd.type==='line'){
+        const fy1=H-cmd.y1, fy2=H-cmd.y2;
+        stream += `${cmd.color} RG 0.5 w ${cmd.x1} ${fy1} m ${cmd.x2} ${fy2} l S\n0 0 0 RG\n`;
+      } else {
+        // text
+        const fy = H-cmd.y;
+        const font = cmd.bold ? 'F2' : 'F1';
+        const sz = cmd.size||10;
+        const col = cmd.color||'0 0 0';
+        let safe = String(cmd.text||'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+        // Non-ASCII to space
+        safe = safe.replace(/[^\x00-\x7F]/g,' ');
+
+        if(cmd.align==='center'||cmd.align==='right'){
+          // Approximate char width
+          const approxW = safe.length * sz * 0.52;
+          let tx = cmd.align==='center' ? cmd.x - approxW/2 : cmd.x - approxW;
+          stream += `BT /${font} ${sz} Tf ${col} rg ${tx} ${fy} Td (${safe}) Tj ET\n`;
+        } else {
+          stream += `BT /${font} ${sz} Tf ${col} rg ${cmd.x} ${fy} Td (${safe}) Tj ET\n`;
+        }
+      }
+    });
+
+    const streamBytes = new TextEncoder().encode(stream).length;
+    const contentObj = addObj(`<< /Length ${stream.length} >>\nstream\n${stream}endstream`);
+
+    const pageObj = addObj(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Contents ${contentObj} 0 R /Resources << /Font << /F1 ${fontObj} 0 R /F2 ${fontBObj} 0 R >> >> >>`);
+    pageObjIds.push(pageObj);
+  });
+
+  // Fix pages object
+  const pagesContent = `<< /Type /Pages /Kids [${pageObjIds.map(n=>n+' 0 R').join(' ')}] /Count ${pageObjIds.length} >>`;
+  // Rebuild body with correct pages obj
+  const pagesObjN = pagesObjIdx;
+  // We need to replace placeholder obj 2
+  const rebuiltLines = body.split('\nendobj\n');
+  rebuiltLines[1] = pagesObjN+' 0 obj\n'+pagesContent;
+  body = rebuiltLines.join('\nendobj\n');
+
+  // XRef + trailer
+  const header = '%PDF-1.4\n';
+  let fullPdf = header;
+  const xrefOffsets = [];
+  
+  // Recount offsets properly
+  const objChunks = body.split(/(?=\d+ 0 obj\n)/);
+  let pos = header.length;
+  const finalOffsets = [];
+  objChunks.forEach(chunk=>{
+    if(!chunk.trim()) return;
+    finalOffsets.push(pos);
+    pos += new TextEncoder().encode(chunk).length;
+  });
+
+  fullPdf += body;
+  const xrefPos = new TextEncoder().encode(fullPdf).length;
+
+  const nObjs = finalOffsets.length;
+  let xref = `xref\n0 ${nObjs+1}\n0000000000 65535 f \n`;
+  finalOffsets.forEach(o=>{
+    xref += String(o).padStart(10,'0')+' 00000 n \n';
+  });
+  xref += `trailer\n<< /Size ${nObjs+1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
+
+  fullPdf += xref;
+
+  // Download
+  const bytes = new TextEncoder().encode(fullPdf);
+  const blob = new Blob([bytes], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+}
+
+function tog(n){const el=document.getElementById('SC'+n);if(el)el.classList.toggle('op');}
+
+/* Convert plain text to HTML — NO markdown symbols will leak through */
+function textToHtml(raw){
+  if(!raw||!raw.trim())return'';
+
+  // Nuclear strip: remove all # chars, standalone ---, === lines
+  const cleaned=raw
+    .split('\n')
+    .map(line=>{
+      const t=line.trim();
+      // Pure symbol lines → remove
+      if(/^[#\-=*_~]{2,}\s*$/.test(t))return'';
+      // Lines starting with # → strip the # and treat as subheading
+      if(/^#{1,6}\s+/.test(t))return '__SUBHEAD__'+t.replace(/^#+\s*/,'');
+      return line;
+    })
+    .join('\n');
+
+  const lines=cleaned.split('\n');
+  let html='';
+  let inUL=false,inOL=false,para=[];
+
+  const flushPara=()=>{
+    if(para.length){
+      const txt=para.join(' ').trim();
+      if(txt)html+='<p>'+fmt(txt)+'</p>';
+      para=[];
+    }
+  };
+  const closeUL=()=>{if(inUL){html+='</ul>';inUL=false;}};
+  const closeOL=()=>{if(inOL){html+='</ol>';inOL=false;}};
+
+  for(const line of lines){
+    const t=line.trim();
+    if(!t){flushPara();closeUL();closeOL();continue;}
+
+    if(t.startsWith('__SUBHEAD__')){
+      flushPara();closeUL();closeOL();
+      html+=`<div class="csub">${safeText(t.slice(11))}</div>`;
+      continue;
+    }
+    if(/^[-*•]\s/.test(t)){
+      flushPara();closeOL();
+      if(!inUL){html+='<ul>';inUL=true;}
+      html+=`<li>${fmt(t.replace(/^[-*•]\s+/,''))}</li>`;
+      continue;
+    }
+    if(/^\d+[.)]\s/.test(t)){
+      flushPara();closeUL();
+      if(!inOL){html+='<ol>';inOL=true;}
+      html+=`<li>${fmt(t.replace(/^\d+[.)]\s+/,''))}</li>`;
+      continue;
+    }
+    closeUL();closeOL();
+    para.push(t);
+  }
+  flushPara();closeUL();closeOL();
+  return html||`<p>${fmt(raw)}</p>`;
+}
+
+// Safe text — escapes HTML special chars
+function safeText(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// Inline formatting — bold and italic only, no hash leakage
+function fmt(s){
+  return safeText(s)
+    .replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+}
+
+function trialsTable(trials){
+  if(!trials||!trials.length)return'';
+
+  const rows=trials.map((t,i)=>{
+    const iso=(t.method_type||t.gradient||'').toLowerCase().includes('isocratic');
+    const badge=iso
+      ?`<span class="mt-badge mt-iso">ISOCRATIC</span>`
+      :`<span class="mt-badge mt-grad">GRADIENT</span>`;
+    const compColor=iso?'color:#6ee7b7;font-weight:600;':'color:#c4b5fd;font-weight:600;';
+    const accentTd=(v)=>`<td style="color:var(--accent);font-weight:600;">${safeText(String(v||'—'))}</td>`;
+    const td=(v)=>`<td>${safeText(String(v||'—'))}</td>`;
+    const mutedTd=(v)=>`<td style="color:var(--muted);font-size:.64rem;line-height:1.5;min-width:170px;">${safeText(String(v||'—'))}</td>`;
+    return`<tr>
+      <td style="white-space:nowrap;min-width:110px;">
+        <span style="font-family:'Space Mono',monospace;font-size:.58rem;padding:.14rem .38rem;border-radius:3px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.35);color:#a78bfa;font-weight:700;margin-right:.3rem;">T${i+1}</span>
+        <span style="font-weight:700;font-size:.75rem;color:var(--text);">${safeText((t.name||'Trial '+(i+1)).replace(/^T\d+[\s\-–]*/,'').substring(0,22))}</span>
+        <div style="margin-top:.3rem;">${badge}</div>
+      </td>
+      ${td(t.column)}
+      ${td(t.mobile_phase_a)}
+      ${td(t.mobile_phase_b)}
+      <td style="${compColor}">${safeText(String(t.gradient||'—'))}</td>
+      ${accentTd(t.pH)}
+      ${td(t.flow_rate)}
+      ${td(t.temperature)}
+      ${td(t.injection_volume)}
+      ${accentTd(t.detection)}
+      ${accentTd(t.N_plates)}
+      ${accentTd(t.tailing_factor)}
+      ${accentTd(t.resolution_Rs)}
+      ${accentTd(t.asymmetry||'—')}
+      ${accentTd(t.retention_time_api)}
+      ${accentTd(t.run_time)}
+      ${mutedTd(t.rationale)}
+    </tr>`;
+  }).join('');
+
+  const ths=['Trial','Column','MP-A (Aqueous)','MP-B (Organic)','Composition / Program',
+    'pH','Flow Rate','Temp','Inj. Vol','Detection',
+    'N Plates','Tailing T','Rs','Asymmetry','RT (API)','Run Time','Rationale'];
+
+  return`
+    <div style="font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);margin-bottom:.5rem;">
+      ← Scroll horizontally to view all 17 parameters →
+    </div>
+    <div class="ttable-wrap">
+      <table class="ttable">
+        <thead>
+          <tr>${ths.map(h=>`<th>${h}</th>`).join('')}</tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function greenBars(scores){
+  if(!scores||!scores.length)return'';
+
+  function scoreGrad(s){
+    if(s>=8)return'linear-gradient(90deg,#059669,#10b981,#34d399)';
+    if(s>=6)return'linear-gradient(90deg,#d97706,#f59e0b,#fcd34d)';
+    if(s>=4)return'linear-gradient(90deg,#ea580c,#f97316,#fb923c)';
+    return'linear-gradient(90deg,#dc2626,#ef4444,#f87171)';
+  }
+  function scoreInfo(s){
+    if(s>=8)return{color:'#34d399',bg:'rgba(16,185,129,.12)',border:'rgba(16,185,129,.3)',label:'Excellent'};
+    if(s>=6)return{color:'#fcd34d',bg:'rgba(245,158,11,.12)',border:'rgba(245,158,11,.3)',label:'Good'};
+    if(s>=4)return{color:'#fb923c',bg:'rgba(249,115,22,.12)',border:'rgba(249,115,22,.3)',label:'Moderate'};
+    return{color:'#f87171',bg:'rgba(239,68,68,.12)',border:'rgba(239,68,68,.3)',label:'Poor'};
+  }
+
+  /* Bar chart */
+  const bars=scores.map((s,i)=>{
+    const si=scoreInfo(s.score||0);
+    const pct=Math.min(100,(s.score||0)*10);
+    const name=(s.trial||'Trial '+(i+1)).replace(/^T\d+[\s\-–]*/,'');
+    return`
+    <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.15rem;">
+      <span style="font-family:'Space Mono',monospace;font-size:.58rem;padding:.12rem .35rem;border-radius:3px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.3);color:#a78bfa;flex-shrink:0;">T${i+1}</span>
+      <div style="width:140px;font-family:'Space Mono',monospace;font-size:.63rem;color:var(--muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${safeText(name)}">${safeText(name.substring(0,20))}</div>
+      <div style="flex:1;height:12px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${scoreGrad(s.score||0)};border-radius:6px;transition:width 1.2s ease;"></div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:.72rem;font-weight:700;color:${si.color};width:34px;text-align:right;">${s.score}/10</div>
+      <span style="font-family:'Space Mono',monospace;font-size:.58rem;padding:.12rem .45rem;border-radius:3px;background:${si.bg};border:1px solid ${si.border};color:${si.color};width:58px;text-align:center;">${si.label}</span>
+    </div>`;
+  }).join('');
+
+  /* Detailed table */
+  const tableRows=scores.map((s,i)=>{
+    const si=scoreInfo(s.score||0);
+    const pct=Math.min(100,(s.score||0)*10);
+    const iso=(s.trial||'').toLowerCase().includes('iso')||(s.trial||'').toLowerCase().includes('green');
+    const typeBadge=iso
+      ?`<span class="mt-badge mt-iso">ISOCRATIC</span>`
+      :`<span class="mt-badge mt-grad">GRADIENT</span>`;
+    return`<tr>
+      <td style="white-space:nowrap;">
+        <span style="font-family:'Space Mono',monospace;font-size:.58rem;padding:.12rem .35rem;border-radius:3px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.3);color:#a78bfa;font-weight:700;margin-right:.35rem;">T${i+1}</span>
+        <span style="font-weight:700;font-size:.74rem;color:var(--text);">${safeText((s.trial||'').replace(/^T\d+[\s\-–]*/,'').substring(0,24))}</span>
+        <div style="margin-top:.25rem;">${typeBadge}</div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <div style="width:90px;height:10px;background:rgba(255,255,255,.05);border-radius:5px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${scoreGrad(s.score||0)};border-radius:5px;"></div>
+          </div>
+          <span style="font-family:'Space Mono',monospace;font-size:.75rem;font-weight:700;color:${si.color};">${s.score}/10</span>
+        </div>
+      </td>
+      <td>
+        <span style="font-family:'Space Mono',monospace;font-size:.62rem;padding:.15rem .5rem;border-radius:4px;background:${si.bg};border:1px solid ${si.border};color:${si.color};font-weight:700;">${si.label}</span>
+      </td>
+      <td style="color:var(--muted);font-size:.67rem;line-height:1.55;">${safeText(s.rationale||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  return`
+    <div style="margin-bottom:.6rem;font-family:'Space Mono',monospace;font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Score Overview</div>
+    <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;margin-bottom:1.2rem;">
+      ${bars}
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;">Detailed Green Score Table</div>
+    <div class="gtable-wrap">
+      <table class="gtable">
+        <thead><tr>
+          <th>Trial</th>
+          <th>Score</th>
+          <th>Rating</th>
+          <th>Assessment</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;">
+      ${[['8-10','#34d399','rgba(16,185,129,.12)','rgba(16,185,129,.3)','Excellent'],
+         ['6-7','#fcd34d','rgba(245,158,11,.12)','rgba(245,158,11,.3)','Good'],
+         ['4-5','#fb923c','rgba(249,115,22,.12)','rgba(249,115,22,.3)','Moderate'],
+         ['1-3','#f87171','rgba(239,68,68,.12)','rgba(239,68,68,.3)','Poor']
+        ].map(([range,color,bg,border,label])=>
+        `<div style="display:flex;align-items:center;gap:.35rem;font-family:'Space Mono',monospace;font-size:.6rem;">
+          <span style="width:10px;height:10px;border-radius:2px;background:${color};display:inline-block;"></span>
+          <span style="color:${color};">${range}</span>
+          <span style="color:var(--muted);">= ${label}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+let pillEls=[];
+function initProg(){
+  document.getElementById('prog').classList.add('show');
+  document.getElementById('pills').innerHTML=STEPS.map((s,i)=>`<div class="pill" id="pl${i}">${s}</div>`).join('');
+  pillEls=STEPS.map((_,i)=>document.getElementById('pl'+i));setProg(0);
+}
+function setProg(i){
+  pillEls.forEach((p,j)=>{p.classList.remove('act','done');if(j<i)p.classList.add('done');else if(j===i)p.classList.add('act');});
+  document.getElementById('pfill').style.width=`${Math.round(i/STEPS.length*100)}%`;
+}
+function finProg(){pillEls.forEach(p=>{p.classList.remove('act');p.classList.add('done');});document.getElementById('pfill').style.width='100%';}
+function showErr(m){const b=document.getElementById('errBox');b.textContent=m;b.classList.add('show');}
+function hideErr(){document.getElementById('errBox').classList.remove('show');}
+
+let _countdownTimer=null;
+function showRateLimit(){
+  hideErr();
+  const box=document.getElementById('rateLimitBox');
+  box.style.display='block';
+  let secs=90;
+  document.getElementById('countdown').textContent=secs+'s';
+  if(_countdownTimer)clearInterval(_countdownTimer);
+  _countdownTimer=setInterval(()=>{
+    secs--;
+    const el=document.getElementById('countdown');
+    if(el)el.textContent=secs+'s';
+    if(secs<=0){
+      clearInterval(_countdownTimer);
+      if(el)el.textContent='Ready!';
+      const btn=document.getElementById('runBtn');
+      if(btn){btn.style.animation='pulse 1s ease-in-out 3';setTimeout(()=>btn.style.animation='',3000);}
+    }
+  },1000);
+}
+function hideRateLimit(){
+  document.getElementById('rateLimitBox').style.display='none';
+  if(_countdownTimer)clearInterval(_countdownTimer);
+}
+function retryNow(){
+  hideRateLimit();
+  run();
+}
+</script>
+</body>
+</html>
